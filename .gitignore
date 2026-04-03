@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+.yarn/cache
+.yarn/unplugged
+.yarn/install-state.gz
+
+# Build
+dist/
+build/
+coverage/
+
+# Nx
+.nx/cache
+.nx/workspace-data
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Misc
+*.log
+tmp/
