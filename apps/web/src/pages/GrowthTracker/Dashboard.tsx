@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Chip from '@mui/material/Chip';
@@ -13,6 +13,9 @@ import NightsStayIcon from '@mui/icons-material/NightsStay';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
 import ShowChartIcon from '@mui/icons-material/ShowChart';
 import StraightenIcon from '@mui/icons-material/Straighten';
+import { useNavigate } from 'react-router-dom';
+
+import { useChildren } from '../../context/ChildContext';
 
 const StatCard = styled(Card)(({ theme }) => ({
   flex: 1,
@@ -40,37 +43,34 @@ const QuickActionCard = styled(Card)(({ theme }) => ({
   }
 }));
 
-interface ChildProfile {
-  name: string;
-  ageMonths: number;
-  lastWeight: string;
-  lastHeight: string;
-  lastSleep: string;
-  nextVaccine: string;
-}
-
-const mockChild: ChildProfile = {
-  name: 'Emma',
-  ageMonths: 9,
-  lastWeight: '8.2 kg',
-  lastHeight: '70.1 cm',
-  lastSleep: '11h 30m',
-  nextVaccine: 'Flu Shot — due in 2 weeks'
-};
-
 export const Dashboard = () => {
-  const [child] = useState<ChildProfile>(mockChild);
+  const { activeChild, getAgeDisplay } = useChildren();
+  const navigate = useNavigate();
 
-  const ageDisplay =
-    child.ageMonths < 12
-      ? `${child.ageMonths} months`
-      : `${Math.floor(child.ageMonths / 12)}y ${child.ageMonths % 12}m`;
+  if (!activeChild) {
+    return (
+      <Box sx={{ textAlign: 'center', py: 8 }}>
+        <ChildCareIcon sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
+        <Typography variant="h5" gutterBottom>
+          No child selected
+        </Typography>
+        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
+          Add a child to start tracking their growth and health.
+        </Typography>
+        <Button variant="contained" onClick={() => navigate('/children')}>
+          Add Child
+        </Button>
+      </Box>
+    );
+  }
+
+  const ageDisplay = getAgeDisplay(activeChild);
 
   return (
     <Box>
       <Box sx={{ mb: 4 }}>
         <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 1 }}>
-          <Typography variant="h3">{child.name}'s Dashboard</Typography>
+          <Typography variant="h3">{activeChild.name}'s Dashboard</Typography>
           <Chip
             icon={<ChildCareIcon />}
             label={ageDisplay}
@@ -80,7 +80,7 @@ export const Dashboard = () => {
           />
         </Stack>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          Here's a snapshot of {child.name}'s latest health data.
+          Here's a snapshot of {activeChild.name}'s latest health data.
         </Typography>
       </Box>
 
@@ -100,7 +100,7 @@ export const Dashboard = () => {
               </StatIconWrapper>
             </Stack>
             <Typography variant="h3" sx={{ mb: 0.5 }}>
-              {child.lastWeight}
+              {'--'}
             </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
               Last recorded weight
@@ -117,7 +117,7 @@ export const Dashboard = () => {
               </StatIconWrapper>
             </Stack>
             <Typography variant="h3" sx={{ mb: 0.5 }}>
-              {child.lastHeight}
+              {'--'}
             </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
               Last recorded height
@@ -134,7 +134,7 @@ export const Dashboard = () => {
               </StatIconWrapper>
             </Stack>
             <Typography variant="h3" sx={{ mb: 0.5 }}>
-              {child.lastSleep}
+              {'--'}
             </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
               Last night's sleep
@@ -234,7 +234,7 @@ export const Dashboard = () => {
           <Stack spacing={2}>
             <Stack direction="row" alignItems="center" spacing={2}>
               <Chip label="Vaccine" color="warning" size="small" />
-              <Typography variant="body2">{child.nextVaccine}</Typography>
+              <Typography variant="body2">{'Schedule upcoming vaccines'}</Typography>
             </Stack>
             <Stack direction="row" alignItems="center" spacing={2}>
               <Chip label="Checkup" color="primary" size="small" />

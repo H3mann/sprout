@@ -12,7 +12,19 @@ export default defineConfig({
   ],
   server: {
     port: 3000,
-    host: 'localhost'
+    host: 'localhost',
+    proxy: {
+      '/api/medlineplus': {
+        target: 'https://wsearch.nlm.nih.gov',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/medlineplus/, '/ws/query')
+      },
+      '/api/perplexity': {
+        target: 'https://api.perplexity.ai',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/perplexity/, '')
+      }
+    }
   },
   preview: {
     port: 4300,

@@ -5,6 +5,7 @@ import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import { useSearchParams } from 'react-router-dom';
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import MedicationIcon from '@mui/icons-material/Medication';
 import NightsStayIcon from '@mui/icons-material/NightsStay';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
@@ -15,6 +16,7 @@ import { Dashboard } from './Dashboard';
 import { GrowthChart } from './GrowthChart';
 import { MealTracking } from './MealTracking';
 import { MedicationTracker } from './MedicationTracker';
+import { Milestones } from './Milestones';
 import { SleepTracker } from './SleepTracker';
 import { VaccineTracker } from './VaccineTracker';
 
@@ -36,6 +38,7 @@ export const GrowthTracker = () => {
           <Tab icon={<ShowChartIcon />} iconPosition="start" label="Growth Chart" />
           <Tab icon={<NightsStayIcon />} iconPosition="start" label="Sleep" />
           <Tab icon={<RestaurantIcon />} iconPosition="start" label="Meals" />
+          <Tab icon={<EmojiEventsIcon />} iconPosition="start" label="Milestones" />
           <Tab icon={<VaccinesIcon />} iconPosition="start" label="Vaccines" />
           <Tab icon={<MedicationIcon />} iconPosition="start" label="Medications" />
         </Tabs>
@@ -45,8 +48,9 @@ export const GrowthTracker = () => {
       {tab === 1 && <GrowthChart />}
       {tab === 2 && <SleepTracker />}
       {tab === 3 && <MealTracking />}
-      {tab === 4 && <VaccineTracker />}
-      {tab === 5 && <MedicationTracker />}
+      {tab === 4 && <Milestones />}
+      {tab === 5 && <VaccineTracker />}
+      {tab === 6 && <MedicationTracker />}
     </Container>
   );
 };
