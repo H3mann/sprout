@@ -11,7 +11,7 @@ export default defineConfig({
     })
   ],
   server: {
-    port: 3000,
+    port: 4200,
     host: 'localhost',
     proxy: {
       '/api/medlineplus': {
@@ -23,6 +23,22 @@ export default defineConfig({
         target: 'https://api.perplexity.ai',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/perplexity/, '')
+      },
+      '/api/children': {
+        target: 'http://localhost:3333',
+        changeOrigin: true
+      },
+      '/api/growth': {
+        target: 'http://localhost:3333',
+        changeOrigin: true
+      },
+      '/api/visit-prep': {
+        target: 'http://localhost:3333',
+        changeOrigin: true
+      },
+      '/api/health': {
+        target: 'http://localhost:3333',
+        changeOrigin: true
       }
     }
   },

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import Tab from '@mui/material/Tab';
@@ -25,6 +25,12 @@ export const GrowthTracker = () => {
   const initialTab = Number(searchParams.get('tab')) || 0;
   const [tab, setTab] = useState(initialTab);
 
+  // Sync tab when navigating with ?tab= param
+  useEffect(() => {
+    const paramTab = Number(searchParams.get('tab')) || 0;
+    if (paramTab !== tab) setTab(paramTab);
+  }, [searchParams]);
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 4 }}>
@@ -36,21 +42,17 @@ export const GrowthTracker = () => {
         >
           <Tab icon={<DashboardIcon />} iconPosition="start" label="Dashboard" />
           <Tab icon={<ShowChartIcon />} iconPosition="start" label="Growth Chart" />
-          <Tab icon={<NightsStayIcon />} iconPosition="start" label="Sleep" />
           <Tab icon={<RestaurantIcon />} iconPosition="start" label="Meals" />
           <Tab icon={<EmojiEventsIcon />} iconPosition="start" label="Milestones" />
           <Tab icon={<VaccinesIcon />} iconPosition="start" label="Vaccines" />
-          <Tab icon={<MedicationIcon />} iconPosition="start" label="Medications" />
         </Tabs>
       </Box>
 
       {tab === 0 && <Dashboard />}
       {tab === 1 && <GrowthChart />}
-      {tab === 2 && <SleepTracker />}
-      {tab === 3 && <MealTracking />}
-      {tab === 4 && <Milestones />}
-      {tab === 5 && <VaccineTracker />}
-      {tab === 6 && <MedicationTracker />}
+      {tab === 2 && <MealTracking />}
+      {tab === 3 && <Milestones />}
+      {tab === 4 && <VaccineTracker />}
     </Container>
   );
 };

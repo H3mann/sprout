@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import CardActionArea from '@mui/material/CardActionArea';
 import CardContent from '@mui/material/CardContent';
@@ -11,6 +12,8 @@ import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import IconButton from '@mui/material/IconButton';
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
@@ -19,6 +22,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import VerifiedIcon from '@mui/icons-material/Verified';
 
 import { PEDIATRIC_FAQ, type FaqEntry } from '../../data/pediatricFaq';
+import { useVisitPrep } from '../../context/VisitPrepContext';
 
 const AnswerCard = styled(Card)(({ theme }) => ({
   border: `2px solid ${theme.palette.primary.main}`,
@@ -90,6 +94,7 @@ function matchQuestion(query: string, faq: FaqEntry[]): FaqEntry[] {
 export const PediatricianFaq = () => {
   const [query, setQuery] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const { addItem, hasQuestion } = useVisitPrep();
 
   const matches = useMemo(() => matchQuestion(query, PEDIATRIC_FAQ), [query]);
   const hasQuery = query.trim().length > 0;
@@ -242,6 +247,23 @@ export const PediatricianFaq = () => {
                       </Typography>
                     </Stack>
                   </Stack>
+
+                  <Divider sx={{ my: 2 }} />
+                  {(() => {
+                    const isSaved = hasQuestion(entry.question);
+                    return (
+                      <Button
+                        variant={isSaved ? 'outlined' : 'contained'}
+                        size="small"
+                        startIcon={isSaved ? <CheckIcon /> : <AssignmentIcon />}
+                        onClick={() => addItem(entry.question, 'faq')}
+                        disabled={isSaved}
+                        color={isSaved ? 'success' : 'primary'}
+                      >
+                        {isSaved ? 'Saved to Visit Prep' : 'Save to Visit Prep'}
+                      </Button>
+                    );
+                  })()}
                 </CardContent>
               </Collapse>
             </FaqCard>

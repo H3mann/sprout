@@ -16,6 +16,8 @@ import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
 import AddIcon from '@mui/icons-material/Add';
@@ -26,6 +28,23 @@ import EditIcon from '@mui/icons-material/Edit';
 import { useNavigate } from 'react-router-dom';
 
 import { useChildren, type Child } from '../../context/ChildContext';
+
+type UnitSystem = 'metric' | 'imperial';
+
+const KG_TO_LBS = 2.20462;
+const CM_TO_IN = 0.393701;
+
+const kgToLbs = (kg: number) => Math.round(kg * KG_TO_LBS * 100) / 100;
+const lbsToKg = (lbs: number) => Math.round(lbs / KG_TO_LBS * 100) / 100;
+const cmToIn = (cm: number) => Math.round(cm * CM_TO_IN * 100) / 100;
+const inToCm = (inches: number) => Math.round(inches / CM_TO_IN * 100) / 100;
+
+const formatImperialHeight = (cm: number) => {
+  const totalInches = cm / 2.54;
+  const ft = Math.floor(totalInches / 12);
+  const inches = Math.round(totalInches % 12);
+  return `${ft}'${inches}"`;
+};
 
 const ChildCard = styled(Card)<{ isActive?: boolean }>(({ theme, isActive }) => ({
   cursor: 'pointer',
@@ -61,9 +80,11 @@ interface ChildFormData {
   name: string;
   dateOfBirth: string;
   gender: 'male' | 'female' | 'other';
+  weightKg: string;
+  heightCm: string;
 }
 
-const emptyForm: ChildFormData = { name: '', dateOfBirth: '', gender: 'male' };
+const emptyForm: ChildFormData = { name: '', dateOfBirth: '', gender: 'male', weightKg: '', heightCm: '' };
 
 export const MyChildren = () => {
   const { children, activeChild, setActiveChildId, addChild, updateChild, removeChild, getAgeDisplay } = useChildren();
@@ -73,11 +94,41 @@ export const MyChildren = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<ChildFormData>(emptyForm);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [unitSystem, setUnitSystem] = useState<UnitSystem>(
+    () => (localStorage.getItem('sprout_unit_system') as UnitSystem) || 'metric'
+  );
+
+  const handleUnitChange = (_: unknown, val: UnitSystem | null) => {
+    if (!val) return;
+    setUnitSystem(val);
+    localStorage.setItem('sprout_unit_system', val);
+
+    // Convert existing form values to the new unit
+    setForm((f) => {
+      const w = parseFloat(f.weightKg);
+      const h = parseFloat(f.heightCm);
+      return {
+        ...f,
+        weightKg: !isNaN(w) ? String(val === 'imperial' ? kgToLbs(w) : lbsToKg(w)) : f.weightKg,
+        heightCm: !isNaN(h) ? String(val === 'imperial' ? cmToIn(h) : inToCm(h)) : f.heightCm,
+      };
+    });
+  };
 
   const handleOpen = (child?: Child) => {
     if (child) {
       setEditingId(child.id);
-      setForm({ name: child.name, dateOfBirth: child.dateOfBirth, gender: child.gender });
+      setForm({
+        name: child.name,
+        dateOfBirth: child.dateOfBirth,
+        gender: child.gender,
+        weightKg: child.weightKg != null
+          ? String(unitSystem === 'imperial' ? kgToLbs(child.weightKg) : child.weightKg)
+          : '',
+        heightCm: child.heightCm != null
+          ? String(unitSystem === 'imperial' ? cmToIn(child.heightCm) : child.heightCm)
+          : '',
+      });
     } else {
       setEditingId(null);
       setForm(emptyForm);
@@ -88,10 +139,21 @@ export const MyChildren = () => {
   const handleSave = () => {
     if (!form.name.trim() || !form.dateOfBirth) return;
 
+    const rawWeight = parseFloat(form.weightKg);
+    const rawHeight = parseFloat(form.heightCm);
+
+    const payload = {
+      name: form.name,
+      dateOfBirth: form.dateOfBirth,
+      gender: form.gender,
+      weightKg: !isNaN(rawWeight) ? (unitSystem === 'imperial' ? lbsToKg(rawWeight) : rawWeight) : null,
+      heightCm: !isNaN(rawHeight) ? (unitSystem === 'imperial' ? inToCm(rawHeight) : rawHeight) : null,
+    };
+
     if (editingId) {
-      updateChild(editingId, form);
+      updateChild(editingId, payload);
     } else {
-      addChild(form);
+      addChild(payload);
     }
     setDialogOpen(false);
     setForm(emptyForm);
@@ -161,13 +223,23 @@ export const MyChildren = () => {
                           />
                         )}
                       </Stack>
-                      <Stack direction="row" spacing={2}>
+                      <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
                         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                           {getAgeDisplay(child)}
                         </Typography>
                         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                           Born {new Date(child.dateOfBirth).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                         </Typography>
+                        {child.weightKg != null && (
+                          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                            {child.weightKg} kg ({kgToLbs(child.weightKg)} lbs)
+                          </Typography>
+                        )}
+                        {child.heightCm != null && (
+                          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                            {child.heightCm} cm ({formatImperialHeight(child.heightCm)})
+                          </Typography>
+                        )}
                       </Stack>
                     </Box>
 
@@ -240,6 +312,38 @@ export const MyChildren = () => {
                 <MenuItem value="other">Other</MenuItem>
               </Select>
             </FormControl>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ pt: 1 }}>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                Current measurements (optional)
+              </Typography>
+              <ToggleButtonGroup
+                value={unitSystem}
+                exclusive
+                onChange={handleUnitChange}
+                size="small"
+              >
+                <ToggleButton value="metric" sx={{ px: 1.5, py: 0.25, fontSize: '0.75rem' }}>kg / cm</ToggleButton>
+                <ToggleButton value="imperial" sx={{ px: 1.5, py: 0.25, fontSize: '0.75rem' }}>lbs / in</ToggleButton>
+              </ToggleButtonGroup>
+            </Stack>
+            <Stack direction="row" spacing={2}>
+              <TextField
+                label={`Weight (${unitSystem === 'metric' ? 'kg' : 'lbs'})`}
+                type="number"
+                value={form.weightKg}
+                onChange={(e) => setForm((f) => ({ ...f, weightKg: e.target.value }))}
+                sx={{ flex: 1 }}
+                slotProps={{ htmlInput: { min: 0, step: 0.1 } }}
+              />
+              <TextField
+                label={`Height (${unitSystem === 'metric' ? 'cm' : 'in'})`}
+                type="number"
+                value={form.heightCm}
+                onChange={(e) => setForm((f) => ({ ...f, heightCm: e.target.value }))}
+                sx={{ flex: 1 }}
+                slotProps={{ htmlInput: { min: 0, step: 0.1 } }}
+              />
+            </Stack>
           </Stack>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>

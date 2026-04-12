@@ -1,3 +1,4 @@
+import { useRef, useState } from 'react';
 import { AiInsight } from './AiInsight';
 import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
@@ -7,6 +8,40 @@ import CardContent from '@mui/material/CardContent';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
+import SearchIcon from '@mui/icons-material/Search';
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const CompactInsightTooltip = ({ active, payload, label, unit, labelPrefix }: any) => {
+  if (!active || !payload?.length) return null;
+  const data: Record<string, number> = {};
+  payload.forEach((entry: any) => {
+    if (entry.value != null) data[entry.dataKey] = entry.value;
+  });
+  const childKey = Object.keys(data).find(k => k.startsWith('child'));
+  return (
+    <Box sx={{ bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: 1.5, px: 1.5, py: 1, boxShadow: 2, minWidth: 130 }}>
+      <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
+        {labelPrefix}: {label} {unit === 'kg/m²' ? '' : unit}
+      </Typography>
+      {childKey != null && data[childKey] != null && (
+        <Typography variant="body2" fontWeight={700} sx={{ color: '#FF5722' }}>
+          Your child: {data[childKey]} {unit}
+        </Typography>
+      )}
+      {data.p50 != null && (
+        <Typography variant="body2" sx={{ color: '#4CAF50' }}>
+          50th %ile: {data.p50} {unit}
+        </Typography>
+      )}
+      {data.p3 != null && data.p97 != null && (
+        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+          Typical range: {data.p3}–{data.p97} {unit}
+        </Typography>
+      )}
+    </Box>
+  );
+};
+/* eslint-enable @typescript-eslint/no-explicit-any */
 import SpeedIcon from '@mui/icons-material/Speed';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
@@ -105,6 +140,8 @@ export const GrowthInsights = ({ measurements, sex, unitSystem, view }: GrowthIn
   const heightUnit = getUnit('height', unitSystem);
   const heightMeasurements = measurements.height;
   const weightMeasurements = measurements.weight;
+  const [wflInsightTrigger, setWflInsightTrigger] = useState(0);
+  const wflInsightRef = useRef<HTMLDivElement>(null);
 
   // ---- 1. Growth Velocity ----
   const buildVelocityData = (items: Measurement[], metricType: Metric) => {
@@ -150,12 +187,21 @@ export const GrowthInsights = ({ measurements, sex, unitSystem, view }: GrowthIn
     })
     .filter(Boolean) as { height: number; childWeight: number; age: string }[];
 
-  // Merge child points into percentile data for combined chart
-  const wflChartData = wflPercentiles.map((row) => {
-    const match = wflChildPoints.find(
-      (p) => Math.abs(p.height - row.height) < (unitSystem === 'metric' ? 3 : 1.5)
-    );
-    return { ...row, childWeight: match?.childWeight ?? null };
+  // Merge child points into percentile data — each child point maps to its single closest row
+  const usedRows = new Set<number>();
+  const wflChartData = wflPercentiles.map((row, idx) => ({ ...row, childWeight: null as number | null, _idx: idx }));
+  wflChildPoints.forEach((p) => {
+    let bestIdx = 0;
+    let bestDist = Infinity;
+    wflChartData.forEach((row, idx) => {
+      const dist = Math.abs(row.height - p.height);
+      if (dist < bestDist && !usedRows.has(idx)) {
+        bestDist = dist;
+        bestIdx = idx;
+      }
+    });
+    usedRows.add(bestIdx);
+    wflChartData[bestIdx].childWeight = p.childWeight;
   });
 
   // ---- 3. BMI Percentile ----
@@ -397,20 +443,7 @@ export const GrowthInsights = ({ measurements, sex, unitSystem, view }: GrowthIn
                     label={{ value: 'BMI (kg/m²)', angle: -90, position: 'insideLeft', offset: 5 }}
                     domain={[10, 22]}
                   />
-                  <Tooltip
-                    formatter={(value, name) => {
-                      const labels: Record<string, string> = {
-                        p3: '3rd percentile',
-                        p15: '15th percentile',
-                        p50: '50th percentile',
-                        p85: '85th percentile',
-                        p97: '97th percentile',
-                        childBmi: 'Your child'
-                      };
-                      return [`${value} kg/m²`, labels[String(name)] || String(name)];
-                    }}
-                    labelFormatter={(label) => `Age: ${label} months`}
-                  />
+                  <Tooltip content={<CompactInsightTooltip unit="kg/m²" labelPrefix="Age" />} />
                   <Legend
                     formatter={(value) => {
                       const labels: Record<string, string> = {
@@ -451,7 +484,7 @@ export const GrowthInsights = ({ measurements, sex, unitSystem, view }: GrowthIn
             title="Growth velocity & BMI insight"
             contextKey={`velocity-bmi-${sex}-${heightMeasurements.length}-${weightMeasurements.length}-${bmiChildPoints.at(-1)?.bmi ?? 'none'}`}
             prompt={(() => {
-              const parts: string[] = [`I'm tracking my ${sex === 'male' ? 'boy' : 'girl'} infant's growth (0-36 months).`];
+              const parts: string[] = [`I'm tracking my ${sex === 'male' ? 'boy' : 'girl'} child's growth.`];
               if (heightVelocity.length > 0) {
                 const lastHV = heightVelocity[heightVelocity.length - 1];
                 parts.push(`Latest height growth velocity: ${lastHV.rate} per month (period ${lastHV.period}).`);
@@ -482,69 +515,75 @@ export const GrowthInsights = ({ measurements, sex, unitSystem, view }: GrowthIn
   return (
     <Box>
       {wflChildPoints.length > 0 ? (
-        <Card sx={{ mb: 3 }}>
-          <CardContent>
-            <Typography variant="h5" gutterBottom>
-              Weight-for-Height
-            </Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-              Plots your child's weight against their height (independent of age) to assess proportionality.
-              This is more sensitive to acute nutritional changes than weight-for-age.
-            </Typography>
-            <ResponsiveContainer width="100%" height={420}>
-              <ComposedChart data={wflChartData} margin={{ top: 10, right: 20, bottom: 10, left: 10 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis
-                  dataKey="height"
-                  label={{ value: `Height (${heightUnit})`, position: 'insideBottomRight', offset: -5 }}
-                  type="number"
-                  domain={['dataMin', 'dataMax']}
-                />
-                <YAxis
-                  label={{ value: `Weight (${weightUnit})`, angle: -90, position: 'insideLeft', offset: 5 }}
-                />
-                <Tooltip
-                  formatter={(value, name) => {
-                    const labels: Record<string, string> = {
-                      p3: '3rd percentile',
-                      p15: '15th percentile',
-                      p50: '50th percentile',
-                      p85: '85th percentile',
-                      p97: '97th percentile',
-                      childWeight: 'Your child'
-                    };
-                    return [`${value} ${weightUnit}`, labels[String(name)] || String(name)];
-                  }}
-                  labelFormatter={(label) => `Height: ${label} ${heightUnit}`}
-                />
-                <Legend
-                  formatter={(value) => {
-                    const labels: Record<string, string> = {
-                      p3: '3rd',
-                      p15: '15th',
-                      p50: '50th',
-                      p85: '85th',
-                      p97: '97th',
-                      childWeight: 'Your child'
-                    };
-                    return labels[value] || value;
-                  }}
-                />
+        <>
+          {/* Insight chip above chart */}
+          <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
+            <Chip
+              icon={<SearchIcon />}
+              label="Research weight-for-height"
+              onClick={() => {
+                setWflInsightTrigger((prev) => prev + 1);
+                setTimeout(() => {
+                  wflInsightRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 200);
+              }}
+              variant="outlined"
+              color="info"
+              clickable
+            />
+          </Stack>
 
-                <Area type="monotone" dataKey="p97" stroke="none" fill="#FFF3E0" fillOpacity={0.4} legendType="none" />
-                <Area type="monotone" dataKey="p3" stroke="none" fill="#FFFFFF" fillOpacity={1} legendType="none" />
+          <Card sx={{ mb: 3 }}>
+            <CardContent>
+              <Typography variant="h5" gutterBottom>
+                Weight-for-Height
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
+                Plots your child's weight against their height (independent of age) to assess proportionality.
+                This is more sensitive to acute nutritional changes than weight-for-age.
+              </Typography>
+              <ResponsiveContainer width="100%" height={420}>
+                <ComposedChart data={wflChartData} margin={{ top: 10, right: 20, bottom: 10, left: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis
+                    dataKey="height"
+                    label={{ value: `Height (${heightUnit})`, position: 'insideBottomRight', offset: -5 }}
+                    type="number"
+                    domain={['dataMin', 'dataMax']}
+                  />
+                  <YAxis
+                    label={{ value: `Weight (${weightUnit})`, angle: -90, position: 'insideLeft', offset: 5 }}
+                  />
+                  <Tooltip content={<CompactInsightTooltip unit={weightUnit} labelPrefix="Height" />} />
+                  <Legend
+                    formatter={(value) => {
+                      const labels: Record<string, string> = {
+                        p3: '3rd',
+                        p15: '15th',
+                        p50: '50th',
+                        p85: '85th',
+                        p97: '97th',
+                        childWeight: 'Your child'
+                      };
+                      return labels[value] || value;
+                    }}
+                  />
 
-                <Line type="monotone" dataKey="p3" stroke="#BDBDBD" strokeDasharray="4 4" dot={false} strokeWidth={1} />
-                <Line type="monotone" dataKey="p15" stroke="#9E9E9E" strokeDasharray="4 4" dot={false} strokeWidth={1} />
-                <Line type="monotone" dataKey="p50" stroke="#FF9800" dot={false} strokeWidth={2} />
-                <Line type="monotone" dataKey="p85" stroke="#9E9E9E" strokeDasharray="4 4" dot={false} strokeWidth={1} />
-                <Line type="monotone" dataKey="p97" stroke="#BDBDBD" strokeDasharray="4 4" dot={false} strokeWidth={1} />
+                  <Area type="monotone" dataKey="p97" stroke="none" fill="#FFF3E0" fillOpacity={0.4} legendType="none" />
+                  <Area type="monotone" dataKey="p3" stroke="none" fill="#FFFFFF" fillOpacity={1} legendType="none" />
 
-                <Scatter dataKey="childWeight" fill="#FF5722" stroke="#FFF" strokeWidth={2} r={6} name="childWeight" />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+                  <Line type="monotone" dataKey="p3" stroke="#BDBDBD" strokeDasharray="4 4" dot={false} strokeWidth={1} />
+                  <Line type="monotone" dataKey="p15" stroke="#9E9E9E" strokeDasharray="4 4" dot={false} strokeWidth={1} />
+                  <Line type="monotone" dataKey="p50" stroke="#FF9800" dot={false} strokeWidth={2} />
+                  <Line type="monotone" dataKey="p85" stroke="#9E9E9E" strokeDasharray="4 4" dot={false} strokeWidth={1} />
+                  <Line type="monotone" dataKey="p97" stroke="#BDBDBD" strokeDasharray="4 4" dot={false} strokeWidth={1} />
+
+                  <Scatter dataKey="childWeight" fill="#FF5722" stroke="#FFF" strokeWidth={2} r={6} name="childWeight" />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </>
       ) : (
         <Alert severity="info">
           Add matching height and weight measurements at the same age (in the Percentiles tab) to see this chart.
@@ -555,11 +594,14 @@ export const GrowthInsights = ({ measurements, sex, unitSystem, view }: GrowthIn
         Based on WHO weight-for-length/height standards. Always consult your pediatrician for clinical interpretation.
       </Alert>
 
-      {wflChildPoints.length > 0 && (
+      <div ref={wflInsightRef} />
+
+      {wflChildPoints.length > 0 && wflInsightTrigger > 0 && (
         <AiInsight
           title="Weight-for-height insight"
           contextKey={`wfl-${sex}-${wflChildPoints.map(p => `${p.height}:${p.childWeight}`).join(',')}`}
           prompt={`I'm tracking my ${sex === 'male' ? 'boy' : 'girl'} infant's weight-for-height proportionality. Their measurements (height → weight): ${wflChildPoints.map(p => `${p.height} ${heightUnit} → ${p.childWeight} ${weightUnit} (age ${p.age})`).join(', ')}. How does their weight-for-height proportionality look? What does it mean when weight-for-height differs from weight-for-age? What should parents know about proportional growth? Keep the answer to 3-4 short paragraphs.`}
+          trigger={wflInsightTrigger}
         />
       )}
     </Box>

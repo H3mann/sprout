@@ -4,17 +4,13 @@ import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Chip from '@mui/material/Chip';
-import CircularProgress from '@mui/material/CircularProgress';
 import Container from '@mui/material/Container';
-import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
-import Link from '@mui/material/Link';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
-import CircleIcon from '@mui/icons-material/Circle';
 import CloseIcon from '@mui/icons-material/Close';
 import QuestionAnswerIcon from '@mui/icons-material/QuestionAnswer';
 import SearchIcon from '@mui/icons-material/Search';
@@ -23,6 +19,8 @@ import VaccinesIcon from '@mui/icons-material/Vaccines';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import { useNavigate } from 'react-router-dom';
 
+import { AnswerCard } from '../../components/AnswerCard';
+import { MedicalLoader } from '../../components/MedicalLoader';
 import { searchPerplexity, type PerplexityResult } from '../../services/perplexity';
 
 const HeroSection = styled(Box)(({ theme }) => ({
@@ -91,23 +89,6 @@ const suggestedQuestions = [
   'What vaccines does my baby need at 6 months?',
   'Why does my baby spit up so much?'
 ];
-
-function formatLine(text: string, citations: { title: string; url: string }[]) {
-  return text
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/#{2,}\s*(.+)/g, '<strong>$1</strong>')
-    .replace(
-      /\[(\d+)\]/g,
-      (_, num) => {
-        const idx = parseInt(num, 10) - 1;
-        const cite = citations[idx];
-        if (cite) {
-          return `<a href="${cite.url}" target="_blank" rel="noopener noreferrer" style="color: #4CAF50; font-size: 0.7rem; vertical-align: super; text-decoration: none; font-weight: 600;">[${num}]</a>`;
-        }
-        return `[${num}]`;
-      }
-    );
-}
 
 export const Home = () => {
   const navigate = useNavigate();
@@ -255,17 +236,7 @@ export const Home = () => {
       {/* Search results */}
       {(loading || result || error) && (
         <Container maxWidth="md" sx={{ py: 4 }}>
-          {loading && (
-            <Card sx={{ textAlign: 'center', py: 5 }}>
-              <CardContent>
-                <CircularProgress size={40} sx={{ mb: 2 }} />
-                <Typography variant="body1">Searching trusted medical sources...</Typography>
-                <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1 }}>
-                  This may take a few seconds
-                </Typography>
-              </CardContent>
-            </Card>
-          )}
+          {loading && <MedicalLoader />}
 
           {error && (
             <Card sx={{ bgcolor: '#FFF3E0' }}>
@@ -277,90 +248,7 @@ export const Home = () => {
 
           {result && (
             <>
-              <Card sx={{ mb: 3, border: '2px solid', borderColor: 'primary.main' }}>
-                <CardContent sx={{ p: 3 }}>
-                  <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-                    <SearchIcon sx={{ color: 'primary.main', fontSize: 22 }} />
-                    <Typography variant="h5">Answer</Typography>
-                  </Stack>
-
-                  <Box sx={{ mb: 3, '& > *:not(:last-child)': { mb: 2 } }}>
-                    {result.answer.split('\n').map((line, i) => {
-                      const trimmed = line.trim();
-                      if (!trimmed) return null;
-
-                      const headerMatch = trimmed.match(/^\*\*(.+?)\*\*$/);
-                      if (headerMatch) {
-                        return (
-                          <Typography key={i} variant="body2" fontWeight={700} sx={{ mt: 2, fontSize: '0.95rem' }}>
-                            {headerMatch[1]}
-                          </Typography>
-                        );
-                      }
-
-                      const mdHeaderMatch = trimmed.match(/^#{2,}\s+(.+)/);
-                      if (mdHeaderMatch) {
-                        return (
-                          <Typography key={i} variant="body2" fontWeight={700} sx={{ mt: 2, fontSize: '0.95rem' }}>
-                            {mdHeaderMatch[1]}
-                          </Typography>
-                        );
-                      }
-
-                      if (trimmed.startsWith('•') || trimmed.startsWith('-')) {
-                        return (
-                          <Stack key={i} direction="row" spacing={1.5} alignItems="flex-start" sx={{ pl: 1 }}>
-                            <CircleIcon sx={{ fontSize: 6, color: 'primary.main', mt: 1, flexShrink: 0 }} />
-                            <Typography
-                              variant="body2"
-                              sx={{ lineHeight: 1.8, fontSize: '0.9rem' }}
-                              dangerouslySetInnerHTML={{ __html: formatLine(trimmed.replace(/^[•\-]\s*/, ''), result.citations) }}
-                            />
-                          </Stack>
-                        );
-                      }
-
-                      return (
-                        <Typography
-                          key={i}
-                          variant="body2"
-                          sx={{ lineHeight: 1.8, fontSize: '0.925rem' }}
-                          dangerouslySetInnerHTML={{ __html: formatLine(trimmed, result.citations) }}
-                        />
-                      );
-                    })}
-                  </Box>
-
-                  {result.citations.length > 0 && (
-                    <>
-                      <Divider sx={{ mb: 2 }} />
-                      <Typography variant="body2" fontWeight={600} sx={{ mb: 1.5 }}>Sources</Typography>
-                      <Stack spacing={0.75}>
-                        {result.citations.map((citation, i) => (
-                          <Stack key={i} direction="row" alignItems="flex-start" spacing={1}>
-                            <Chip
-                              label={i + 1}
-                              size="small"
-                              sx={{ minWidth: 24, height: 22, fontSize: '0.7rem', fontWeight: 700, bgcolor: 'primary.main', color: 'white' }}
-                            />
-                            <Link href={citation.url} target="_blank" rel="noopener noreferrer" sx={{ fontSize: '0.8rem', lineHeight: 1.5 }}>
-                              {citation.title}
-                            </Link>
-                          </Stack>
-                        ))}
-                      </Stack>
-                    </>
-                  )}
-
-                  <Box sx={{ mt: 2.5 }}>
-                    <Chip
-                      label="Sources restricted to: PubMed, NIH, AAP, CDC, WHO, Mayo Clinic"
-                      size="small"
-                      sx={{ bgcolor: '#E3F2FD', color: '#1565C0', fontWeight: 500, fontSize: '0.75rem' }}
-                    />
-                  </Box>
-                </CardContent>
-              </Card>
+              <AnswerCard result={result} query={query.trim()} />
 
               <Card sx={{ bgcolor: '#FAFBFC', mb: 3 }}>
                 <CardContent sx={{ py: 2 }}>

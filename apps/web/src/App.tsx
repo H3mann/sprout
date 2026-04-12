@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 import { ChildProvider } from './context/ChildContext';
+import { VisitPrepProvider } from './context/VisitPrepContext';
 import { Router } from './Router';
 import { theme } from './theme';
 
@@ -25,7 +26,9 @@ export const App = () => {
       <QueryClientProvider client={queryClient}>
         <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-right" />
         <ChildProvider>
-          <Router />
+          <VisitPrepProvider>
+            <Router />
+          </VisitPrepProvider>
         </ChildProvider>
       </QueryClientProvider>
     </ThemeProvider>

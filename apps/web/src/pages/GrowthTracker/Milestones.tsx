@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardActionArea from '@mui/material/CardActionArea';
@@ -26,6 +26,7 @@ import {
   type Milestone,
   type MilestoneCategory
 } from '../../data/milestones';
+import { milestonesApi } from '../../services/api';
 
 const MilestoneCard = styled(Card)<{ completed?: boolean }>(({ theme, completed }) => ({
   transition: 'transform 0.15s ease, box-shadow 0.15s ease',
@@ -64,21 +65,32 @@ export const Milestones = () => {
     return saved ? new Set(JSON.parse(saved)) : new Set();
   });
 
+  // Load from API when child is selected
+  useEffect(() => {
+    if (!activeChild) return;
+    milestonesApi.list(activeChild.id).then((records) => {
+      const ids = new Set(records.map((r) => r.milestone_id));
+      setCompleted(ids);
+    }).catch(() => { /* fall back to localStorage state */ });
+  }, [activeChild]);
+
   const [expandedAge, setExpandedAge] = useState<number | null>(childAgeMonths);
   const [categoryFilter, setCategoryFilter] = useState<MilestoneCategory | 'All'>('All');
 
-  const toggleCompleted = (id: string) => {
+  const toggleCompleted = useCallback((id: string) => {
     setCompleted((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
         next.delete(id);
+        if (activeChild) milestonesApi.uncomplete(activeChild.id, id).catch(() => {});
       } else {
         next.add(id);
+        if (activeChild) milestonesApi.complete(activeChild.id, id).catch(() => {});
       }
       localStorage.setItem('sprout_milestones_completed', JSON.stringify([...next]));
       return next;
     });
-  };
+  }, [activeChild]);
 
   const filterMilestones = (milestones: Milestone[]) => {
     if (categoryFilter === 'All') return milestones;

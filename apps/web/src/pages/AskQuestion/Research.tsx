@@ -5,7 +5,6 @@ import Card from '@mui/material/Card';
 import CardActionArea from '@mui/material/CardActionArea';
 import CardContent from '@mui/material/CardContent';
 import Chip from '@mui/material/Chip';
-import CircularProgress from '@mui/material/CircularProgress';
 import Collapse from '@mui/material/Collapse';
 import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
@@ -23,6 +22,9 @@ import LaunchIcon from '@mui/icons-material/Launch';
 import SearchIcon from '@mui/icons-material/Search';
 import VerifiedIcon from '@mui/icons-material/Verified';
 
+
+import { AnswerCard } from '../../components/AnswerCard';
+import { MedicalLoader } from '../../components/MedicalLoader';
 import { searchMedlinePlus, type MedlinePlusResult } from '../../services/medlinePlus';
 import { searchPerplexity, type PerplexityResult } from '../../services/perplexity';
 
@@ -167,151 +169,10 @@ export const Research = () => {
       )}
 
       {/* Loading state */}
-      {loading && (
-        <Card sx={{ mb: 3, textAlign: 'center', py: 5 }}>
-          <CardContent>
-            <CircularProgress size={40} sx={{ mb: 2 }} />
-            <Typography variant="body1">
-              Searching PubMed, AAP, CDC, WHO, and other trusted sources...
-            </Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1 }}>
-              This may take a few seconds
-            </Typography>
-          </CardContent>
-        </Card>
-      )}
+      {loading && <MedicalLoader />}
 
       {/* Perplexity answer — primary result */}
-      {perplexityResult && (
-        <Card sx={{ mb: 4, border: '2px solid', borderColor: 'primary.main' }}>
-          <CardContent sx={{ p: 3 }}>
-            <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-              <SearchIcon sx={{ color: 'primary.main', fontSize: 22 }} />
-              <Typography variant="h5">Answer</Typography>
-            </Stack>
-
-            <Box
-              sx={{
-                mb: 3,
-                '& > *:not(:last-child)': { mb: 2 }
-              }}
-            >
-              {perplexityResult.answer.split('\n').map((line, i) => {
-                const trimmed = line.trim();
-                if (!trimmed) return null;
-
-                // Format line: bold, inline citations as superscript links, headers
-                const formatLine = (text: string) => {
-                  return text
-                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                    .replace(/#{2,}\s*(.+)/g, '<strong>$1</strong>')
-                    .replace(
-                      /\[(\d+)\]/g,
-                      (_, num) => {
-                        const idx = parseInt(num, 10) - 1;
-                        const cite = perplexityResult.citations[idx];
-                        if (cite) {
-                          return `<a href="${cite.url}" target="_blank" rel="noopener noreferrer" style="color: #4CAF50; font-size: 0.7rem; vertical-align: super; text-decoration: none; font-weight: 600;">[${num}]</a>`;
-                        }
-                        return `[${num}]`;
-                      }
-                    );
-                };
-
-                // Bold-only header lines like **Key Takeaways:**
-                const headerMatch = trimmed.match(/^\*\*(.+?)\*\*$/);
-                if (headerMatch) {
-                  return (
-                    <Typography key={i} variant="body2" fontWeight={700} sx={{ mt: 2, fontSize: '0.95rem' }}>
-                      {headerMatch[1]}
-                    </Typography>
-                  );
-                }
-
-                // Markdown headers ## Header
-                const mdHeaderMatch = trimmed.match(/^#{2,}\s+(.+)/);
-                if (mdHeaderMatch) {
-                  return (
-                    <Typography key={i} variant="body2" fontWeight={700} sx={{ mt: 2, fontSize: '0.95rem' }}>
-                      {mdHeaderMatch[1]}
-                    </Typography>
-                  );
-                }
-
-                // Bullet points
-                if (trimmed.startsWith('•') || trimmed.startsWith('-')) {
-                  return (
-                    <Stack key={i} direction="row" spacing={1.5} alignItems="flex-start" sx={{ pl: 1 }}>
-                      <CircleIcon sx={{ fontSize: 6, color: 'primary.main', mt: 1, flexShrink: 0 }} />
-                      <Typography
-                        variant="body2"
-                        sx={{ lineHeight: 1.8, fontSize: '0.9rem' }}
-                        dangerouslySetInnerHTML={{ __html: formatLine(trimmed.replace(/^[•\-]\s*/, '')) }}
-                      />
-                    </Stack>
-                  );
-                }
-
-                // Regular paragraph
-                return (
-                  <Typography
-                    key={i}
-                    variant="body2"
-                    sx={{ lineHeight: 1.8, fontSize: '0.925rem' }}
-                    dangerouslySetInnerHTML={{ __html: formatLine(trimmed) }}
-                  />
-                );
-              })}
-            </Box>
-
-            {perplexityResult.citations.length > 0 && (
-              <>
-                <Divider sx={{ mb: 2 }} />
-                <Typography variant="body2" fontWeight={600} sx={{ mb: 1.5 }}>
-                  Sources
-                </Typography>
-                <Stack spacing={0.75}>
-                  {perplexityResult.citations.map((citation, i) => (
-                    <Stack key={i} direction="row" alignItems="flex-start" spacing={1}>
-                      <Chip
-                        label={i + 1}
-                        size="small"
-                        sx={{
-                          minWidth: 24,
-                          height: 22,
-                          fontSize: '0.7rem',
-                          fontWeight: 700,
-                          bgcolor: 'primary.main',
-                          color: 'white'
-                        }}
-                      />
-                      <Link
-                        href={citation.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        sx={{
-                          fontSize: '0.8rem',
-                          lineHeight: 1.5
-                        }}
-                      >
-                        {citation.title}
-                      </Link>
-                    </Stack>
-                  ))}
-                </Stack>
-              </>
-            )}
-
-            <Box sx={{ mt: 2.5 }}>
-              <Chip
-                label="Sources restricted to: PubMed, NIH, AAP, CDC, WHO, Mayo Clinic"
-                size="small"
-                sx={{ bgcolor: '#E3F2FD', color: '#1565C0', fontWeight: 500, fontSize: '0.75rem' }}
-              />
-            </Box>
-          </CardContent>
-        </Card>
-      )}
+      {perplexityResult && <AnswerCard result={perplexityResult} query={query.trim()} />}
 
       {/* Perplexity error */}
       {perplexityError && !loading && (

@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
+import { childrenApi, type ApiChild } from '../services/api';
 
 export interface Child {
   id: string;
@@ -6,52 +7,56 @@ export interface Child {
   dateOfBirth: string; // ISO date string
   gender: 'male' | 'female' | 'other';
   photoUrl?: string;
+  weightKg?: number | null;
+  heightCm?: number | null;
 }
 
 interface ChildContextValue {
   children: Child[];
   activeChild: Child | null;
+  loading: boolean;
   setActiveChildId: (id: string) => void;
-  addChild: (child: Omit<Child, 'id'>) => void;
-  updateChild: (id: string, updates: Partial<Omit<Child, 'id'>>) => void;
-  removeChild: (id: string) => void;
+  addChild: (child: Omit<Child, 'id'>) => Promise<void>;
+  updateChild: (id: string, updates: Partial<Omit<Child, 'id'>>) => Promise<void>;
+  removeChild: (id: string) => Promise<void>;
   getAgeMonths: (child: Child) => number;
   getAgeDisplay: (child: Child) => string;
 }
 
 const ChildContext = createContext<ChildContextValue | null>(null);
 
-const STORAGE_KEY = 'sprout_children';
 const ACTIVE_KEY = 'sprout_active_child';
 
-function generateId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-}
-
-function loadChildren(): Child[] {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveChildren(children: Child[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(children));
+function toChild(api: ApiChild): Child {
+  return {
+    id: api.id,
+    name: api.name,
+    dateOfBirth: api.date_of_birth,
+    gender: api.gender,
+    photoUrl: api.photo_url || undefined,
+    weightKg: api.weight_kg,
+    heightCm: api.height_cm,
+  };
 }
 
 export function ChildProvider({ children: reactChildren }: { children: ReactNode }) {
-  const [children, setChildren] = useState<Child[]>(loadChildren);
+  const [children, setChildren] = useState<Child[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeChildId, setActiveChildId] = useState<string>(
     () => localStorage.getItem(ACTIVE_KEY) || ''
   );
 
   const activeChild = children.find((c) => c.id === activeChildId) || children[0] || null;
 
+  // Load children from API on mount
   useEffect(() => {
-    saveChildren(children);
-  }, [children]);
+    childrenApi.list()
+      .then((data) => {
+        setChildren(data.map(toChild));
+      })
+      .catch((err) => console.error('Failed to load children:', err))
+      .finally(() => setLoading(false));
+  }, []);
 
   useEffect(() => {
     if (activeChild) {
@@ -59,11 +64,18 @@ export function ChildProvider({ children: reactChildren }: { children: ReactNode
     }
   }, [activeChild]);
 
-  const addChild = useCallback((child: Omit<Child, 'id'>) => {
-    const newChild: Child = { ...child, id: generateId() };
+  const addChild = useCallback(async (child: Omit<Child, 'id'>) => {
+    const created = await childrenApi.create({
+      name: child.name,
+      date_of_birth: child.dateOfBirth,
+      gender: child.gender,
+      photo_url: child.photoUrl,
+      weight_kg: child.weightKg ?? undefined,
+      height_cm: child.heightCm ?? undefined,
+    });
+    const newChild = toChild(created);
     setChildren((prev) => {
       const next = [...prev, newChild];
-      // Auto-select if first child
       if (next.length === 1) {
         setActiveChildId(newChild.id);
       }
@@ -71,11 +83,21 @@ export function ChildProvider({ children: reactChildren }: { children: ReactNode
     });
   }, []);
 
-  const updateChild = useCallback((id: string, updates: Partial<Omit<Child, 'id'>>) => {
-    setChildren((prev) => prev.map((c) => (c.id === id ? { ...c, ...updates } : c)));
+  const updateChild = useCallback(async (id: string, updates: Partial<Omit<Child, 'id'>>) => {
+    const apiUpdates: Record<string, unknown> = {};
+    if (updates.name !== undefined) apiUpdates.name = updates.name;
+    if (updates.dateOfBirth !== undefined) apiUpdates.date_of_birth = updates.dateOfBirth;
+    if (updates.gender !== undefined) apiUpdates.gender = updates.gender;
+    if (updates.photoUrl !== undefined) apiUpdates.photo_url = updates.photoUrl;
+    if (updates.weightKg !== undefined) apiUpdates.weight_kg = updates.weightKg;
+    if (updates.heightCm !== undefined) apiUpdates.height_cm = updates.heightCm;
+
+    const updated = await childrenApi.update(id, apiUpdates as Parameters<typeof childrenApi.update>[1]);
+    setChildren((prev) => prev.map((c) => (c.id === id ? toChild(updated) : c)));
   }, []);
 
-  const removeChild = useCallback((id: string) => {
+  const removeChild = useCallback(async (id: string) => {
+    await childrenApi.remove(id);
     setChildren((prev) => {
       const next = prev.filter((c) => c.id !== id);
       if (activeChildId === id) {
@@ -106,6 +128,7 @@ export function ChildProvider({ children: reactChildren }: { children: ReactNode
       value={{
         children,
         activeChild,
+        loading,
         setActiveChildId,
         addChild,
         updateChild,

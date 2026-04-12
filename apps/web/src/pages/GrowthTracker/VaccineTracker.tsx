@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
@@ -14,6 +14,9 @@ import EventIcon from '@mui/icons-material/Event';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+
+import { useChildren } from '../../context/ChildContext';
+import { vaccinesApi } from '../../services/api';
 
 type VaccineStatus = 'completed' | 'due' | 'upcoming' | 'overdue';
 
@@ -114,8 +117,31 @@ const initialSchedule: VaccineDose[] = [
 ];
 
 export const VaccineTracker = () => {
+  const { activeChild } = useChildren();
   const [schedule, setSchedule] = useState<VaccineDose[]>(initialSchedule);
   const [expandedAge, setExpandedAge] = useState<string | null>(null);
+
+  // Load saved vaccine records from API
+  useEffect(() => {
+    if (!activeChild) return;
+    vaccinesApi.list(activeChild.id).then((records) => {
+      if (records.length === 0) return;
+      setSchedule((prev) =>
+        prev.map((dose) => {
+          const record = records.find((r) => r.vaccine_id === dose.id);
+          if (!record) return dose;
+          return {
+            ...dose,
+            status: record.status as VaccineStatus,
+            dateAdministered: record.date_administered || undefined,
+            provider: record.provider || undefined,
+            lotNumber: record.lot_number || undefined,
+            notes: record.notes || undefined,
+          };
+        })
+      );
+    }).catch(() => { /* fall back to defaults */ });
+  }, [activeChild]);
 
   const completed = schedule.filter((v) => v.status === 'completed').length;
   const total = schedule.length;
@@ -124,13 +150,22 @@ export const VaccineTracker = () => {
   const progress = Math.round((completed / total) * 100);
 
   const handleMarkComplete = (id: string) => {
+    const today = new Date().toISOString().split('T')[0];
     setSchedule((prev) =>
       prev.map((v) =>
         v.id === id
-          ? { ...v, status: 'completed' as VaccineStatus, dateAdministered: new Date().toISOString().split('T')[0] }
+          ? { ...v, status: 'completed' as VaccineStatus, dateAdministered: today }
           : v
       )
     );
+    if (activeChild) {
+      vaccinesApi.upsert({
+        child_id: activeChild.id,
+        vaccine_id: id,
+        status: 'completed',
+        date_administered: today,
+      }).catch(() => {});
+    }
   };
 
   // Group by recommended age
