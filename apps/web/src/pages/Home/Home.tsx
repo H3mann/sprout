@@ -16,6 +16,7 @@ import QuestionAnswerIcon from '@mui/icons-material/QuestionAnswer';
 import SearchIcon from '@mui/icons-material/Search';
 import ShowChartIcon from '@mui/icons-material/ShowChart';
 import VaccinesIcon from '@mui/icons-material/Vaccines';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import { useNavigate } from 'react-router-dom';
 
@@ -63,21 +64,28 @@ const features = [
     iconBg: '#4CAF50',
     title: 'Growth Tracking',
     description:
-      'Monitor your child\'s height, weight, and head circumference against WHO and CDC growth charts. See exactly where they stand and track trends over time — all reviewed by board-certified pediatricians.'
+      'Monitor your child\'s height and weight against WHO and CDC percentile charts. See where they stand, track trends over time, and get adult height predictions using the Tanner method based on parental heights.'
   },
   {
     icon: <VaccinesIcon sx={{ fontSize: 28, color: 'white' }} />,
     iconBg: '#FF9800',
     title: 'Vaccine Schedules',
     description:
-      'Stay on top of your child\'s immunization schedule with personalized timelines based on their age. Get reminders for upcoming doses and keep a complete vaccination record in one place.'
+      'Stay on top of your child\'s immunization schedule with personalized timelines based on their age. Track completed doses and keep a complete vaccination record in one place.'
   },
   {
     icon: <QuestionAnswerIcon sx={{ fontSize: 28, color: 'white' }} />,
     iconBg: '#2196F3',
     title: 'Ask a Question',
     description:
-      'Have a health question? Get answers sourced directly from peer-reviewed medical literature and clinical guidelines — not AI-generated content, not forums, not anecdotal advice. Real evidence, curated by real pediatricians.'
+      'Have a health question? Get answers sourced from peer-reviewed medical literature and clinical guidelines — PubMed, NIH, AAP, and CDC. Real evidence, not forums or anecdotal advice.'
+  },
+  {
+    icon: <AutoAwesomeIcon sx={{ fontSize: 28, color: 'white' }} />,
+    iconBg: '#7B1FA2',
+    title: 'Insights, Not Just Numbers',
+    description:
+      'Sprout doesn\'t just show you data — it helps you understand it. See where your child falls on growth percentiles, what their trajectory looks like, and get clear explanations of trends, predictions, and what it all means for your child\'s development.'
   }
 ];
 
@@ -133,7 +141,7 @@ export const Home = () => {
           <Typography variant="h1" gutterBottom>
             Parenting with confidence,{' '}
             <Box component="span" sx={{ color: 'primary.main' }}>
-              guided by pediatricians
+              backed by evidence
             </Box>
           </Typography>
           <Typography
@@ -146,8 +154,7 @@ export const Home = () => {
               mb: 4
             }}
           >
-            Get evidence-based answers to your child's health questions — sourced from
-            PubMed, NIH, AAP, and CDC. No forums. No guesswork.
+            Easily ask questions, track growth, milestones,vaccines, and make sense of the numbers. No forums or guesswork—only evidence-based insights from PubMed, NIH, AAP, and the CDC.
           </Typography>
 
           {/* Search bar */}
@@ -280,15 +287,15 @@ export const Home = () => {
           textAlign="center"
           sx={{ color: 'text.secondary', maxWidth: 560, mx: 'auto', mb: 6 }}
         >
-          Built by pediatricians who understand that parents deserve better than
-          guesswork, misinformation, and midnight Google spirals.
+          Built for parents who deserve better than guesswork, misinformation,
+          and midnight Google spirals.
         </Typography>
 
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
-            gap: 4
+            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' },
+            gap: 3
           }}
         >
           {features.map((feature) => (
@@ -318,11 +325,10 @@ export const Home = () => {
             variant="body1"
             sx={{ fontSize: '1.1rem', opacity: 0.9, mb: 4, maxWidth: 600, mx: 'auto' }}
           >
-            Every feature, every answer, and every recommendation in Sprout is
-            reviewed and validated by board-certified pediatricians. We don't
-            rely on AI-generated content or crowdsourced opinions. When you use
-            the research tool, your answers come from peer-reviewed research and
-            established clinical guidelines — the same sources your pediatrician uses.
+            Sprout is built by pediatricians who know what parents actually need.
+             Our answers come from peer-reviewed research and established clinical guidelines — the same sources your
+            pediatrician uses. Growth tracking follows WHO and CDC standards, and
+            predictions use clinically validated methods.
           </Typography>
           <Stack direction="row" spacing={3} justifyContent="center">
             <Box textAlign="center">
@@ -332,15 +338,15 @@ export const Home = () => {
               </Typography>
             </Box>
             <Box textAlign="center">
-              <Typography variant="h3">Pediatrician-Reviewed</Typography>
+              <Typography variant="h3">Built by Pediatricians</Typography>
               <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                Every answer vetted by real doctors
+                Designed by doctors, for parents
               </Typography>
             </Box>
             <Box textAlign="center">
               <Typography variant="h3">No Guesswork</Typography>
               <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                No forums, no AI, no anecdotes
+                No forums, no anecdotes, no misinformation
               </Typography>
             </Box>
           </Stack>

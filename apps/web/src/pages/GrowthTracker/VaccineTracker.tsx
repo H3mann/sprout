@@ -20,7 +20,7 @@ import { vaccinesApi } from '../../services/api';
 
 type VaccineStatus = 'completed' | 'due' | 'upcoming' | 'overdue';
 
-interface VaccineDose {
+export interface VaccineDose {
   id: string;
   vaccine: string;
   dose: string;
@@ -61,7 +61,7 @@ const VaccineCard = styled(Card)<{ status: VaccineStatus }>(({ theme, status }) 
 }));
 
 // CDC recommended immunization schedule for children 0–36 months
-const initialSchedule: VaccineDose[] = [
+export const initialSchedule: VaccineDose[] = [
   // Birth
   { id: '1', vaccine: 'Hepatitis B (HepB)', dose: '1st dose', recommendedAge: 'Birth', ageMonths: 0, status: 'completed', dateAdministered: '2025-07-01', provider: 'Dr. Martinez', lotNumber: 'HB-2025-A1' },
 

@@ -21,6 +21,7 @@ import { useNavigate } from 'react-router-dom';
 import { useChildren } from '../../context/ChildContext';
 import { getMilestonesForChild } from '../../data/milestones';
 import { milestonesApi, vaccinesApi } from '../../services/api';
+import { initialSchedule } from './VaccineTracker';
 import {
   HEIGHT_BOYS_CM,
   HEIGHT_GIRLS_CM,
@@ -97,7 +98,7 @@ const QuickActionCard = styled(Card)(() => ({
   }
 }));
 
-const TOTAL_VACCINES = 31; // matches initialSchedule length in VaccineTracker
+const TOTAL_VACCINES = initialSchedule.length;
 
 export const Dashboard = () => {
   const { activeChild, getAgeDisplay, getAgeMonths } = useChildren();
@@ -127,11 +128,19 @@ export const Dashboard = () => {
       setMilestoneCompleted(relevant);
     }).catch(() => {});
 
-    // Load vaccines
+    // Load vaccines — merge API records with initial schedule defaults
     vaccinesApi.list(activeChild.id).then((records) => {
-      setVaccineCompleted(records.filter((r) => r.status === 'completed').length);
-      setVaccineDue(records.filter((r) => r.status === 'due' || r.status === 'overdue').length);
-    }).catch(() => {});
+      const merged = initialSchedule.map((dose) => {
+        const record = records.find((r) => r.vaccine_id === dose.id);
+        return record ? { ...dose, status: record.status } : dose;
+      });
+      setVaccineCompleted(merged.filter((v) => v.status === 'completed').length);
+      setVaccineDue(merged.filter((v) => v.status === 'due' || v.status === 'overdue').length);
+    }).catch(() => {
+      // Fall back to initial schedule defaults
+      setVaccineCompleted(initialSchedule.filter((v) => v.status === 'completed').length);
+      setVaccineDue(initialSchedule.filter((v) => v.status === 'due' || v.status === 'overdue').length);
+    });
   }, [activeChild, ageMonthsVal]);
 
   if (!activeChild) {
@@ -340,18 +349,25 @@ export const Dashboard = () => {
           </CardContent>
         </QuickActionCard>
 
-        <QuickActionCard>
+        <QuickActionCard sx={{ opacity: 0.65, cursor: 'default', '&:hover': { transform: 'none', boxShadow: 'none' } }}>
           <CardContent>
             <Stack direction="row" alignItems="center" spacing={2}>
               <IconButton sx={{ bgcolor: '#FFF3E0' }}>
                 <RestaurantIcon sx={{ color: '#FF9800' }} />
               </IconButton>
-              <Box>
-                <Typography variant="body1" fontWeight={600}>
-                  Log Meal
-                </Typography>
+              <Box sx={{ flex: 1 }}>
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <Typography variant="body1" fontWeight={600}>
+                    Log Meal
+                  </Typography>
+                  <Chip
+                    label="Coming Soon"
+                    size="small"
+                    sx={{ bgcolor: '#FFF3E0', color: '#E65100', fontWeight: 600, fontSize: '0.65rem', height: 20 }}
+                  />
+                </Stack>
                 <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  Track today's meals
+                  Meal tracking and nutrition insights — in progress
                 </Typography>
               </Box>
             </Stack>

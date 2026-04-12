@@ -24,6 +24,8 @@ import SearchIcon from '@mui/icons-material/Search';
 import ShowChartIcon from '@mui/icons-material/ShowChart';
 import VaccinesIcon from '@mui/icons-material/Vaccines';
 import AssignmentIcon from '@mui/icons-material/Assignment';
+import RestaurantIcon from '@mui/icons-material/Restaurant';
+import Tooltip from '@mui/material/Tooltip';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 import { useChildren } from '../../context/ChildContext';
@@ -55,6 +57,7 @@ const menuItems = [
   { label: 'My Children', path: '/children', icon: <PeopleIcon /> },
   { label: 'Growth Tracker', path: '/tracker', icon: <ShowChartIcon /> },
   { label: 'Vaccines', path: '/tracker?tab=4', icon: <VaccinesIcon /> },
+  { label: 'Nutrition', path: '', icon: <RestaurantIcon />, disabled: true, tooltip: 'Coming soon — personalized meal plans, nutrition tracking, and dietary guidance tailored to your child\'s age and needs' },
   { label: 'Dosage Calculator', path: '/dosage', icon: <LocalHospitalIcon /> },
   { label: 'Visit Prep', path: '/visit-prep', icon: <AssignmentIcon /> },
   { label: 'FAQ & Research', path: '/ask', icon: <MenuBookIcon /> },
@@ -178,14 +181,16 @@ export const Header = () => {
               const isActive = item.path === '/'
                 ? location.pathname === '/'
                 : location.pathname + location.search === item.path || location.pathname === item.path;
-              return (
+
+              const button = (
                 <ListItemButton
                   key={item.label}
-                  onClick={() => handleNav(item.path)}
+                  onClick={() => !item.disabled && handleNav(item.path)}
                   selected={isActive}
+                  disabled={item.disabled}
                   sx={{ py: 1.5 }}
                 >
-                  <ListItemIcon sx={{ minWidth: 40, color: isActive ? 'primary.main' : 'text.secondary' }}>
+                  <ListItemIcon sx={{ minWidth: 40, color: item.disabled ? 'text.disabled' : isActive ? 'primary.main' : 'text.secondary' }}>
                     {item.icon}
                   </ListItemIcon>
                   <ListItemText
@@ -197,7 +202,22 @@ export const Header = () => {
                       fontSize: '0.95rem'
                     }}
                   />
+                  {item.disabled && (
+                    <Chip
+                      label="Soon"
+                      size="small"
+                      sx={{ bgcolor: '#FFF3E0', color: '#E65100', fontWeight: 600, fontSize: '0.6rem', height: 18 }}
+                    />
+                  )}
                 </ListItemButton>
+              );
+
+              return item.tooltip ? (
+                <Tooltip key={item.label} title={item.tooltip} placement="right" arrow>
+                  <span>{button}</span>
+                </Tooltip>
+              ) : (
+                button
               );
             })}
           </List>
