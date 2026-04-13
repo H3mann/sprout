@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -X POST https://api.perplexity.ai/v1/responses -H 'Authorization: Bearer __CMDSUB_OUTPUT__')",
+      "Bash(python3 -m json.tool)"
+    ]
+  }
+}
