@@ -76,6 +76,6 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
   res.status(500).json({ error: 'An internal server error occurred.' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Sprout API running on port ${PORT}`);
+app.listen(Number(PORT), '0.0.0.0', () => {
+  console.log(`Sprout API running on 0.0.0.0:${PORT}`);
 });
