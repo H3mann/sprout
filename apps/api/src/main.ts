@@ -17,9 +17,24 @@ import visitPrepRouter from './routes/visitPrep';
 const app = express();
 const PORT = process.env.PORT || 3333;
 
-// CORS — configurable via env var
-const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:4200';
-app.use(cors({ origin: corsOrigin }));
+// CORS — supports comma-separated origins via CORS_ORIGIN env var
+const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:4200')
+  .split(',')
+  .map((o) => o.trim());
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      // Allow requests with no origin (e.g. curl, server-to-server)
+      if (!origin) return callback(null, true);
+      // Exact match against allowed list
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      // Allow any Vercel preview URL for this project
+      if (/^https:\/\/sprout.*\.vercel\.app$/.test(origin)) return callback(null, true);
+      callback(new Error(`CORS: origin ${origin} not allowed`));
+    },
+  })
+);
 
 app.use(express.json());
 
