@@ -11,6 +11,7 @@ import childrenRouter from './routes/children';
 import growthRouter from './routes/growth';
 import milestonesRouter from './routes/milestones';
 import vaccinesRouter from './routes/vaccines';
+import searchRouter from './routes/search';
 import visitPrepRouter from './routes/visitPrep';
 
 const app = express();
@@ -43,6 +44,9 @@ app.use((req, _res, next) => {
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+// Public routes (no auth — used by home page search)
+app.use('/api/search', searchRouter);
 
 // Protected routes
 app.use('/api/children', requireAuth, childrenRouter);

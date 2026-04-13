@@ -14,37 +14,7 @@ export default defineConfig({
     port: 4200,
     host: 'localhost',
     proxy: {
-      '/api/medlineplus': {
-        target: 'https://wsearch.nlm.nih.gov',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/medlineplus/, '/ws/query')
-      },
-      '/api/perplexity': {
-        target: 'https://api.perplexity.ai',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/perplexity/, '')
-      },
-      '/api/children': {
-        target: 'http://localhost:3333',
-        changeOrigin: true
-      },
-      '/api/growth': {
-        target: 'http://localhost:3333',
-        changeOrigin: true
-      },
-      '/api/visit-prep': {
-        target: 'http://localhost:3333',
-        changeOrigin: true
-      },
-      '/api/vaccines': {
-        target: 'http://localhost:3333',
-        changeOrigin: true
-      },
-      '/api/milestones': {
-        target: 'http://localhost:3333',
-        changeOrigin: true
-      },
-      '/api/health': {
+      '/api': {
         target: 'http://localhost:3333',
         changeOrigin: true
       }

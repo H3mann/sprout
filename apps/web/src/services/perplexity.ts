@@ -16,21 +16,12 @@ const MEDICAL_DOMAINS = [
   'clevelandclinic.org'
 ];
 
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
+
 export async function searchPerplexity(query: string): Promise<PerplexityResult> {
-  const apiKey = import.meta.env.VITE_PERPLEXITY_API_KEY;
-
-  if (!apiKey) {
-    throw new Error(
-      'Perplexity API key not configured. Add VITE_PERPLEXITY_API_KEY to your .env file.'
-    );
-  }
-
-  const response = await fetch('/api/perplexity/v1/responses', {
+  const response = await fetch(`${API_BASE}/search/perplexity`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       preset: 'fast-search',
       input: `You are a pediatric health research assistant. Answer the following question using only peer-reviewed medical sources. Write in clear, parent-friendly language. Focus on pediatric and child health.\n\nQuestion: ${query}`,
@@ -46,8 +37,8 @@ export async function searchPerplexity(query: string): Promise<PerplexityResult>
   });
 
   if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Perplexity API error: ${response.status} — ${error}`);
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || `Search error: ${response.status}`);
   }
 
   const data = await response.json();

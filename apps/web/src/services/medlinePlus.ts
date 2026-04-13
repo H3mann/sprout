@@ -136,13 +136,15 @@ function parseDocuments(xml: string, query: string): MedlinePlusResult[] {
     .slice(0, 5);
 }
 
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
+
 export async function searchMedlinePlus(query: string): Promise<MedlinePlusResult[]> {
   const params = new URLSearchParams({
     db: 'healthTopics',
     term: query
   });
 
-  const response = await fetch(`/api/medlineplus?${params}`);
+  const response = await fetch(`${API_BASE}/search/medlineplus?${params}`);
 
   if (!response.ok) {
     throw new Error(`MedlinePlus API error: ${response.status}`);
