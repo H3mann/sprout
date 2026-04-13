@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import DOMPurify from 'dompurify';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
@@ -144,7 +145,7 @@ export const AnswerCard = ({ result, query }: AnswerCardProps) => {
                     <Typography
                       variant="body2"
                       sx={{ lineHeight: 1.8, fontSize: '0.9rem' }}
-                      dangerouslySetInnerHTML={{ __html: formatLine(trimmed.replace(/^[•\-]\s*/, ''), result.citations) }}
+                      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(formatLine(trimmed.replace(/^[•\-]\s*/, ''), result.citations)) }}
                     />
                   </Stack>
                 );
@@ -155,7 +156,7 @@ export const AnswerCard = ({ result, query }: AnswerCardProps) => {
                   key={i}
                   variant="body2"
                   sx={{ lineHeight: 1.8, fontSize: '0.925rem' }}
-                  dangerouslySetInnerHTML={{ __html: formatLine(trimmed, result.citations) }}
+                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(formatLine(trimmed, result.citations)) }}
                 />
               );
             })}
@@ -180,7 +181,7 @@ export const AnswerCard = ({ result, query }: AnswerCardProps) => {
                   <Typography
                     variant="body2"
                     sx={{ lineHeight: 1.7, fontSize: '0.925rem' }}
-                    dangerouslySetInnerHTML={{ __html: formatLine(point, result.citations) }}
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(formatLine(point, result.citations)) }}
                   />
                 </Box>
               ))}

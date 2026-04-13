@@ -18,7 +18,7 @@ router.get('/', async (req, res) => {
       .eq('child_id', childId)
       .order('added_at', { ascending: true });
 
-    if (error) return res.status(500).json({ error: error.message });
+    if (error) { console.error('[visitPrep:list]', error.message); return res.status(500).json({ error: 'Failed to fetch visit prep items.' }); }
     return res.json(data);
   }
 
@@ -37,7 +37,7 @@ router.get('/', async (req, res) => {
     .in('child_id', childIds)
     .order('added_at', { ascending: true });
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) { console.error('[visitPrep:list]', error.message); return res.status(500).json({ error: 'Failed to fetch visit prep items.' }); }
   res.json(data);
 });
 
@@ -54,7 +54,7 @@ router.post('/', async (req, res) => {
     .select()
     .single();
 
-  if (error) return res.status(400).json({ error: error.message });
+  if (error) { console.error('[visitPrep:create]', error.message); return res.status(400).json({ error: 'Failed to create visit prep item.' }); }
   res.status(201).json(data);
 });
 
@@ -75,7 +75,7 @@ router.delete('/:id', async (req, res) => {
     .delete()
     .eq('id', req.params.id);
 
-  if (error) return res.status(400).json({ error: error.message });
+  if (error) { console.error('[visitPrep:delete]', error.message); return res.status(400).json({ error: 'Failed to delete visit prep item.' }); }
   res.status(204).send();
 });
 
@@ -89,7 +89,7 @@ router.delete('/clear/:childId', async (req, res) => {
     .delete()
     .eq('child_id', req.params.childId);
 
-  if (error) return res.status(400).json({ error: error.message });
+  if (error) { console.error('[visitPrep:clearAll]', error.message); return res.status(400).json({ error: 'Failed to clear visit prep items.' }); }
   res.status(204).send();
 });
 

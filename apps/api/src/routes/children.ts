@@ -11,7 +11,7 @@ router.get('/', async (req, res) => {
     .eq('user_id', req.userId!)
     .order('created_at', { ascending: true });
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) { console.error('[children:list]', error.message); return res.status(500).json({ error: 'Failed to fetch children.' }); }
   res.json(data);
 });
 
@@ -24,7 +24,7 @@ router.get('/:id', async (req, res) => {
     .eq('user_id', req.userId!)
     .single();
 
-  if (error) return res.status(404).json({ error: error.message });
+  if (error) { console.error('[children:get]', error.message); return res.status(404).json({ error: 'Child not found.' }); }
   res.json(data);
 });
 
@@ -38,7 +38,7 @@ router.post('/', async (req, res) => {
     .select()
     .single();
 
-  if (error) return res.status(400).json({ error: error.message });
+  if (error) { console.error('[children:create]', error.message); return res.status(400).json({ error: 'Failed to create child.' }); }
   res.status(201).json(data);
 });
 
@@ -54,7 +54,7 @@ router.put('/:id', async (req, res) => {
     .select()
     .single();
 
-  if (error) return res.status(400).json({ error: error.message });
+  if (error) { console.error('[children:update]', error.message); return res.status(400).json({ error: 'Failed to update child.' }); }
   res.json(data);
 });
 
@@ -66,7 +66,7 @@ router.delete('/:id', async (req, res) => {
     .eq('id', req.params.id)
     .eq('user_id', req.userId!);
 
-  if (error) return res.status(400).json({ error: error.message });
+  if (error) { console.error('[children:delete]', error.message); return res.status(400).json({ error: 'Failed to delete child.' }); }
   res.status(204).send();
 });
 

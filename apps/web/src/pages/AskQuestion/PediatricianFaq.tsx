@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import DOMPurify from 'dompurify';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
@@ -225,9 +226,11 @@ export const PediatricianFaq = () => {
                       '& strong': { fontWeight: 600 }
                     }}
                     dangerouslySetInnerHTML={{
-                      __html: entry.answer
-                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                        .replace(/\n/g, '<br />')
+                      __html: DOMPurify.sanitize(
+                        entry.answer
+                          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                          .replace(/\n/g, '<br />')
+                      )
                     }}
                   />
 

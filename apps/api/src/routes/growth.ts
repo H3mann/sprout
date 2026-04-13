@@ -15,7 +15,7 @@ router.get('/:childId', async (req, res) => {
     .eq('child_id', req.params.childId)
     .order('recorded_at', { ascending: true });
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) { console.error('[growth:list]', error.message); return res.status(500).json({ error: 'Failed to fetch growth entries.' }); }
   res.json(data);
 });
 
@@ -32,7 +32,7 @@ router.post('/', async (req, res) => {
     .select()
     .single();
 
-  if (error) return res.status(400).json({ error: error.message });
+  if (error) { console.error('[growth:create]', error.message); return res.status(400).json({ error: 'Failed to create growth entry.' }); }
   res.status(201).json(data);
 });
 
@@ -58,7 +58,7 @@ router.put('/:id', async (req, res) => {
     .select()
     .single();
 
-  if (error) return res.status(400).json({ error: error.message });
+  if (error) { console.error('[growth:update]', error.message); return res.status(400).json({ error: 'Failed to update growth entry.' }); }
   res.json(data);
 });
 
@@ -79,7 +79,7 @@ router.delete('/:id', async (req, res) => {
     .delete()
     .eq('id', req.params.id);
 
-  if (error) return res.status(400).json({ error: error.message });
+  if (error) { console.error('[growth:delete]', error.message); return res.status(400).json({ error: 'Failed to delete growth entry.' }); }
   res.status(204).send();
 });
 

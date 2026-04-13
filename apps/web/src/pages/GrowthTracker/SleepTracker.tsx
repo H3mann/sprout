@@ -173,7 +173,7 @@ export const SleepTracker = () => {
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="date" tick={{ fontSize: 12 }} />
               <YAxis label={{ value: 'Hours', angle: -90, position: 'insideLeft' }} />
-              <Tooltip formatter={(value: number, name: string) => [`${value}h`, name === 'night' ? 'Night sleep' : 'Naps']} />
+              <Tooltip formatter={(value, name) => [`${value}h`, name === 'night' ? 'Night sleep' : 'Naps']} />
               <ReferenceLine y={recommendation.min} stroke="#9C27B0" strokeDasharray="4 4" label={{ value: 'Min', fill: '#9C27B0', fontSize: 11 }} />
               <ReferenceLine y={recommendation.max} stroke="#9C27B0" strokeDasharray="4 4" label={{ value: 'Max', fill: '#9C27B0', fontSize: 11 }} />
               <Bar dataKey="night" stackId="sleep" fill="#7B1FA2" radius={[0, 0, 0, 0]} name="night" />

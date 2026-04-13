@@ -15,7 +15,7 @@ router.get('/:childId', async (req, res) => {
     .eq('child_id', req.params.childId)
     .order('completed_at', { ascending: true });
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) { console.error('[milestones:list]', error.message); return res.status(500).json({ error: 'Failed to fetch milestones.' }); }
   res.json(data);
 });
 
@@ -32,7 +32,7 @@ router.post('/', async (req, res) => {
     .select()
     .single();
 
-  if (error) return res.status(400).json({ error: error.message });
+  if (error) { console.error('[milestones:complete]', error.message); return res.status(400).json({ error: 'Failed to save milestone.' }); }
   res.status(201).json(data);
 });
 
@@ -47,7 +47,7 @@ router.delete('/:childId/:milestoneId', async (req, res) => {
     .eq('child_id', req.params.childId)
     .eq('milestone_id', req.params.milestoneId);
 
-  if (error) return res.status(400).json({ error: error.message });
+  if (error) { console.error('[milestones:delete]', error.message); return res.status(400).json({ error: 'Failed to delete milestone.' }); }
   res.status(204).send();
 });
 

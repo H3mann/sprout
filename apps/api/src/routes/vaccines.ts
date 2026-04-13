@@ -15,7 +15,7 @@ router.get('/:childId', async (req, res) => {
     .eq('child_id', req.params.childId)
     .order('updated_at', { ascending: true });
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) { console.error('[vaccines:list]', error.message); return res.status(500).json({ error: 'Failed to fetch vaccine records.' }); }
   res.json(data);
 });
 
@@ -35,7 +35,7 @@ router.post('/', async (req, res) => {
     .select()
     .single();
 
-  if (error) return res.status(400).json({ error: error.message });
+  if (error) { console.error('[vaccines:upsert]', error.message); return res.status(400).json({ error: 'Failed to save vaccine record.' }); }
   res.status(201).json(data);
 });
 
@@ -50,7 +50,7 @@ router.delete('/:childId/:vaccineId', async (req, res) => {
     .eq('child_id', req.params.childId)
     .eq('vaccine_id', req.params.vaccineId);
 
-  if (error) return res.status(400).json({ error: error.message });
+  if (error) { console.error('[vaccines:delete]', error.message); return res.status(400).json({ error: 'Failed to delete vaccine record.' }); }
   res.status(204).send();
 });
 
