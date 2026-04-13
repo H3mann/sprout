@@ -1,0 +1,7 @@
+{
+  "buildCommand": "npx nx build web",
+  "outputDirectory": "dist/apps/web",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
