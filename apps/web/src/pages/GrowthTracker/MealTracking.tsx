@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
@@ -16,6 +17,7 @@ import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
+import ConstructionIcon from '@mui/icons-material/Construction';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import LocalDrinkIcon from '@mui/icons-material/LocalDrink';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
@@ -183,6 +185,14 @@ export const MealTracking = () => {
           </ToggleButton>
         </ToggleButtonGroup>
       </Stack>
+
+      <Alert
+        severity="warning"
+        icon={<ConstructionIcon />}
+        sx={{ mb: 3 }}
+      >
+        <strong>Work in Progress</strong> — Meal tracking is still under development. Entries are not saved and will be lost when you leave this page.
+      </Alert>
 
       {mode === 'infant' && (
         <Card sx={{ mb: 3, bgcolor: '#FCE4EC' }}>

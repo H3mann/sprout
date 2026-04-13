@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Chip from '@mui/material/Chip';
+import CircularProgress from '@mui/material/CircularProgress';
 import Container from '@mui/material/Container';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -133,10 +135,14 @@ export const MyChildren = () => {
       setEditingId(null);
       setForm(emptyForm);
     }
+    setSaveError(null);
     setDialogOpen(true);
   };
 
-  const handleSave = () => {
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const handleSave = async () => {
     if (!form.name.trim() || !form.dateOfBirth) return;
 
     const rawWeight = parseFloat(form.weightKg);
@@ -150,14 +156,22 @@ export const MyChildren = () => {
       heightCm: !isNaN(rawHeight) ? (unitSystem === 'imperial' ? inToCm(rawHeight) : rawHeight) : null,
     };
 
-    if (editingId) {
-      updateChild(editingId, payload);
-    } else {
-      addChild(payload);
+    setSaving(true);
+    setSaveError(null);
+    try {
+      if (editingId) {
+        await updateChild(editingId, payload);
+      } else {
+        await addChild(payload);
+      }
+      setDialogOpen(false);
+      setForm(emptyForm);
+      setEditingId(null);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to save. Please try again.');
+    } finally {
+      setSaving(false);
     }
-    setDialogOpen(false);
-    setForm(emptyForm);
-    setEditingId(null);
   };
 
   const handleDelete = (id: string) => {
@@ -345,15 +359,20 @@ export const MyChildren = () => {
               />
             </Stack>
           </Stack>
+          {saveError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {saveError}
+            </Alert>
+          )}
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
+          <Button onClick={() => setDialogOpen(false)} disabled={saving}>Cancel</Button>
           <Button
             variant="contained"
             onClick={handleSave}
-            disabled={!form.name.trim() || !form.dateOfBirth}
+            disabled={!form.name.trim() || !form.dateOfBirth || saving}
           >
-            {editingId ? 'Save Changes' : 'Add Child'}
+            {saving ? <CircularProgress size={20} color="inherit" /> : editingId ? 'Save Changes' : 'Add Child'}
           </Button>
         </DialogActions>
       </Dialog>

@@ -15,6 +15,7 @@ import AddIcon from '@mui/icons-material/Add';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
+import PhoneIphoneIcon from '@mui/icons-material/PhoneIphone';
 import PrintIcon from '@mui/icons-material/Print';
 
 import { useVisitPrep } from '../../context/VisitPrepContext';
@@ -191,6 +192,23 @@ export const VisitPrep = () => {
       <Alert severity="info" variant="standard" sx={{ mt: 3 }}>
         Your questions are saved to the cloud and accessible from any device.
       </Alert>
+
+      <Card sx={{ mt: 2, border: '1px solid', borderColor: 'secondary.light', bgcolor: '#FFF8E1' }}>
+        <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 2, '&:last-child': { pb: 2 } }}>
+          <PhoneIphoneIcon sx={{ fontSize: 32, color: 'secondary.main' }} />
+          <Box sx={{ flex: 1 }}>
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
+              <Typography variant="body1" fontWeight={700} sx={{ fontSize: '0.95rem' }}>
+                Text to your phone
+              </Typography>
+              <Chip label="Coming Soon" size="small" sx={{ bgcolor: '#FFF3E0', color: '#E65100', fontWeight: 600, fontSize: '0.65rem', height: 20 }} />
+            </Stack>
+            <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.85rem' }}>
+              Soon you'll be able to text your questions and answers directly to your phone so you're prepared and ready to go when you walk into your child's appointment.
+            </Typography>
+          </Box>
+        </CardContent>
+      </Card>
     </Container>
   );
 };

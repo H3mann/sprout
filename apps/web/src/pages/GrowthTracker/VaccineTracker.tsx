@@ -5,6 +5,7 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Chip from '@mui/material/Chip';
 import Divider from '@mui/material/Divider';
+import IconButton from '@mui/material/IconButton';
 import LinearProgress from '@mui/material/LinearProgress';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
@@ -53,48 +54,54 @@ const StatusIcon = ({ status }: { status: VaccineStatus }) => {
   }
 };
 
-const VaccineCard = styled(Card)<{ status: VaccineStatus }>(({ theme, status }) => ({
+const VaccineCard = styled(Card)<{ status: VaccineStatus }>(({ status }) => ({
   borderLeft: `4px solid ${statusConfig[status].color}`,
   '&:hover': {
     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
   }
 }));
 
+export function computeNaturalStatus(vaccineAgeMonths: number, childAgeMonths: number): VaccineStatus {
+  if (childAgeMonths < vaccineAgeMonths) return 'upcoming';
+  if (childAgeMonths <= vaccineAgeMonths + 2) return 'due';
+  return 'overdue';
+}
+
 // CDC recommended immunization schedule for children 0–36 months
 export const initialSchedule: VaccineDose[] = [
   // Birth
-  { id: '1', vaccine: 'Hepatitis B (HepB)', dose: '1st dose', recommendedAge: 'Birth', ageMonths: 0, status: 'completed', dateAdministered: '2025-07-01', provider: 'Dr. Martinez', lotNumber: 'HB-2025-A1' },
+  { id: '1', vaccine: 'Hepatitis B (HepB)', dose: '1st dose', recommendedAge: 'Birth', ageMonths: 0, status: 'upcoming' },
 
   // 1 month
-  { id: '2', vaccine: 'Hepatitis B (HepB)', dose: '2nd dose', recommendedAge: '1 month', ageMonths: 1, status: 'completed', dateAdministered: '2025-08-01', provider: 'Dr. Martinez', lotNumber: 'HB-2025-A2' },
+  { id: '2', vaccine: 'Hepatitis B (HepB)', dose: '2nd dose', recommendedAge: '1 month', ageMonths: 1, status: 'upcoming' },
 
   // 2 months
-  { id: '3', vaccine: 'DTaP', dose: '1st dose', recommendedAge: '2 months', ageMonths: 2, status: 'completed', dateAdministered: '2025-09-02', provider: 'Dr. Martinez' },
-  { id: '4', vaccine: 'IPV (Polio)', dose: '1st dose', recommendedAge: '2 months', ageMonths: 2, status: 'completed', dateAdministered: '2025-09-02', provider: 'Dr. Martinez' },
-  { id: '5', vaccine: 'Hib', dose: '1st dose', recommendedAge: '2 months', ageMonths: 2, status: 'completed', dateAdministered: '2025-09-02', provider: 'Dr. Martinez' },
-  { id: '6', vaccine: 'PCV13 (Pneumococcal)', dose: '1st dose', recommendedAge: '2 months', ageMonths: 2, status: 'completed', dateAdministered: '2025-09-02', provider: 'Dr. Martinez' },
-  { id: '7', vaccine: 'Rotavirus (RV)', dose: '1st dose', recommendedAge: '2 months', ageMonths: 2, status: 'completed', dateAdministered: '2025-09-02', provider: 'Dr. Martinez' },
+  { id: '3', vaccine: 'DTaP', dose: '1st dose', recommendedAge: '2 months', ageMonths: 2, status: 'upcoming' },
+  { id: '4', vaccine: 'IPV (Polio)', dose: '1st dose', recommendedAge: '2 months', ageMonths: 2, status: 'upcoming' },
+  { id: '5', vaccine: 'Hib', dose: '1st dose', recommendedAge: '2 months', ageMonths: 2, status: 'upcoming' },
+  { id: '6', vaccine: 'PCV13 (Pneumococcal)', dose: '1st dose', recommendedAge: '2 months', ageMonths: 2, status: 'upcoming' },
+  { id: '7', vaccine: 'Rotavirus (RV)', dose: '1st dose', recommendedAge: '2 months', ageMonths: 2, status: 'upcoming' },
 
   // 4 months
-  { id: '8', vaccine: 'DTaP', dose: '2nd dose', recommendedAge: '4 months', ageMonths: 4, status: 'completed', dateAdministered: '2025-11-04', provider: 'Dr. Martinez' },
-  { id: '9', vaccine: 'IPV (Polio)', dose: '2nd dose', recommendedAge: '4 months', ageMonths: 4, status: 'completed', dateAdministered: '2025-11-04', provider: 'Dr. Martinez' },
-  { id: '10', vaccine: 'Hib', dose: '2nd dose', recommendedAge: '4 months', ageMonths: 4, status: 'completed', dateAdministered: '2025-11-04', provider: 'Dr. Martinez' },
-  { id: '11', vaccine: 'PCV13 (Pneumococcal)', dose: '2nd dose', recommendedAge: '4 months', ageMonths: 4, status: 'completed', dateAdministered: '2025-11-04', provider: 'Dr. Martinez' },
-  { id: '12', vaccine: 'Rotavirus (RV)', dose: '2nd dose', recommendedAge: '4 months', ageMonths: 4, status: 'completed', dateAdministered: '2025-11-04', provider: 'Dr. Martinez' },
+  { id: '8', vaccine: 'DTaP', dose: '2nd dose', recommendedAge: '4 months', ageMonths: 4, status: 'upcoming' },
+  { id: '9', vaccine: 'IPV (Polio)', dose: '2nd dose', recommendedAge: '4 months', ageMonths: 4, status: 'upcoming' },
+  { id: '10', vaccine: 'Hib', dose: '2nd dose', recommendedAge: '4 months', ageMonths: 4, status: 'upcoming' },
+  { id: '11', vaccine: 'PCV13 (Pneumococcal)', dose: '2nd dose', recommendedAge: '4 months', ageMonths: 4, status: 'upcoming' },
+  { id: '12', vaccine: 'Rotavirus (RV)', dose: '2nd dose', recommendedAge: '4 months', ageMonths: 4, status: 'upcoming' },
 
   // 6 months
-  { id: '13', vaccine: 'DTaP', dose: '3rd dose', recommendedAge: '6 months', ageMonths: 6, status: 'completed', dateAdministered: '2026-01-05', provider: 'Dr. Martinez' },
-  { id: '14', vaccine: 'IPV (Polio)', dose: '3rd dose', recommendedAge: '6 months', ageMonths: 6, status: 'completed', dateAdministered: '2026-01-05', provider: 'Dr. Martinez' },
-  { id: '15', vaccine: 'Hib', dose: '3rd dose', recommendedAge: '6 months', ageMonths: 6, status: 'completed', dateAdministered: '2026-01-05', provider: 'Dr. Martinez' },
-  { id: '16', vaccine: 'PCV13 (Pneumococcal)', dose: '3rd dose', recommendedAge: '6 months', ageMonths: 6, status: 'completed', dateAdministered: '2026-01-05', provider: 'Dr. Martinez' },
-  { id: '17', vaccine: 'Rotavirus (RV)', dose: '3rd dose', recommendedAge: '6 months', ageMonths: 6, status: 'completed', dateAdministered: '2026-01-05', provider: 'Dr. Martinez' },
-  { id: '18', vaccine: 'Hepatitis B (HepB)', dose: '3rd dose', recommendedAge: '6–18 months', ageMonths: 6, status: 'completed', dateAdministered: '2026-01-05', provider: 'Dr. Martinez' },
+  { id: '13', vaccine: 'DTaP', dose: '3rd dose', recommendedAge: '6 months', ageMonths: 6, status: 'upcoming' },
+  { id: '14', vaccine: 'IPV (Polio)', dose: '3rd dose', recommendedAge: '6 months', ageMonths: 6, status: 'upcoming' },
+  { id: '15', vaccine: 'Hib', dose: '3rd dose', recommendedAge: '6 months', ageMonths: 6, status: 'upcoming' },
+  { id: '16', vaccine: 'PCV13 (Pneumococcal)', dose: '3rd dose', recommendedAge: '6 months', ageMonths: 6, status: 'upcoming' },
+  { id: '17', vaccine: 'Rotavirus (RV)', dose: '3rd dose', recommendedAge: '6 months', ageMonths: 6, status: 'upcoming' },
+  { id: '18', vaccine: 'Hepatitis B (HepB)', dose: '3rd dose', recommendedAge: '6–18 months', ageMonths: 6, status: 'upcoming' },
 
   // 6+ months (seasonal)
-  { id: '19', vaccine: 'Influenza (Flu)', dose: '1st dose', recommendedAge: '6+ months (yearly)', ageMonths: 6, status: 'completed', dateAdministered: '2026-01-15', provider: 'Dr. Martinez' },
+  { id: '19', vaccine: 'Influenza (Flu)', dose: '1st dose', recommendedAge: '6+ months (yearly)', ageMonths: 6, status: 'upcoming' },
 
-  // 9 months — due now
-  { id: '20', vaccine: 'Influenza (Flu)', dose: '2nd dose', recommendedAge: '9 months', ageMonths: 9, status: 'due' },
+  // 9 months
+  { id: '20', vaccine: 'Influenza (Flu)', dose: '2nd dose', recommendedAge: '9 months', ageMonths: 9, status: 'upcoming' },
 
   // 12 months
   { id: '21', vaccine: 'MMR', dose: '1st dose', recommendedAge: '12–15 months', ageMonths: 12, status: 'upcoming' },
@@ -113,21 +120,31 @@ export const initialSchedule: VaccineDose[] = [
   { id: '28', vaccine: 'DTaP', dose: '5th dose', recommendedAge: '4–6 years', ageMonths: 48, status: 'upcoming' },
   { id: '29', vaccine: 'IPV (Polio)', dose: '4th dose', recommendedAge: '4–6 years', ageMonths: 48, status: 'upcoming' },
   { id: '30', vaccine: 'MMR', dose: '2nd dose', recommendedAge: '4–6 years', ageMonths: 48, status: 'upcoming' },
-  { id: '31', vaccine: 'Varicella', dose: '2nd dose', recommendedAge: '4–6 years', ageMonths: 48, status: 'upcoming' }
+  { id: '31', vaccine: 'Varicella', dose: '2nd dose', recommendedAge: '4–6 years', ageMonths: 48, status: 'upcoming' },
 ];
 
 export const VaccineTracker = () => {
-  const { activeChild } = useChildren();
+  const { activeChild, getAgeMonths } = useChildren();
   const [schedule, setSchedule] = useState<VaccineDose[]>(initialSchedule);
   const [expandedAge, setExpandedAge] = useState<string | null>(null);
 
-  // Load saved vaccine records from API
+  const childAgeMonths = activeChild ? getAgeMonths(activeChild) : 0;
+
+  // Build schedule with natural statuses from child's age, then overlay API data
   useEffect(() => {
-    if (!activeChild) return;
+    const base = initialSchedule.map((entry) => ({
+      ...entry,
+      status: computeNaturalStatus(entry.ageMonths, childAgeMonths),
+    }));
+
+    if (!activeChild) {
+      setSchedule(base);
+      return;
+    }
+
     vaccinesApi.list(activeChild.id).then((records) => {
-      if (records.length === 0) return;
-      setSchedule((prev) =>
-        prev.map((dose) => {
+      setSchedule(
+        base.map((dose) => {
           const record = records.find((r) => r.vaccine_id === dose.id);
           if (!record) return dose;
           return {
@@ -140,8 +157,10 @@ export const VaccineTracker = () => {
           };
         })
       );
-    }).catch(() => { /* fall back to defaults */ });
-  }, [activeChild]);
+    }).catch(() => {
+      setSchedule(base);
+    });
+  }, [activeChild, childAgeMonths]);
 
   const completed = schedule.filter((v) => v.status === 'completed').length;
   const total = schedule.length;
@@ -149,22 +168,85 @@ export const VaccineTracker = () => {
   const overdue = schedule.filter((v) => v.status === 'overdue').length;
   const progress = Math.round((completed / total) * 100);
 
-  const handleMarkComplete = (id: string) => {
-    const today = new Date().toISOString().split('T')[0];
-    setSchedule((prev) =>
-      prev.map((v) =>
-        v.id === id
-          ? { ...v, status: 'completed' as VaccineStatus, dateAdministered: today }
-          : v
-      )
-    );
-    if (activeChild) {
-      vaccinesApi.upsert({
-        child_id: activeChild.id,
-        vaccine_id: id,
-        status: 'completed',
-        date_administered: today,
-      }).catch(() => {});
+  const handleToggle = (id: string) => {
+    const dose = schedule.find((v) => v.id === id);
+    if (!dose) return;
+
+    if (dose.status === 'completed') {
+      // Uncomplete — revert to natural status based on child's age
+      const naturalStatus = computeNaturalStatus(dose.ageMonths, childAgeMonths);
+      setSchedule((prev) =>
+        prev.map((v) =>
+          v.id === id
+            ? { ...v, status: naturalStatus, dateAdministered: undefined, provider: undefined, lotNumber: undefined, notes: undefined }
+            : v
+        )
+      );
+      if (activeChild) {
+        vaccinesApi.remove(activeChild.id, id).catch(() => {});
+      }
+    } else {
+      // Mark complete
+      const today = new Date().toISOString().split('T')[0];
+      setSchedule((prev) =>
+        prev.map((v) =>
+          v.id === id
+            ? { ...v, status: 'completed' as VaccineStatus, dateAdministered: today }
+            : v
+        )
+      );
+      if (activeChild) {
+        vaccinesApi.upsert({
+          child_id: activeChild.id,
+          vaccine_id: id,
+          status: 'completed',
+          date_administered: today,
+        }).catch(() => {});
+      }
+    }
+  };
+
+  const handleSelectAll = (doses: VaccineDose[]) => {
+    const allCompleted = doses.every((d) => d.status === 'completed');
+
+    if (allCompleted) {
+      // Deselect all — revert each to natural status
+      const updates = doses.map((d) => ({
+        id: d.id,
+        naturalStatus: computeNaturalStatus(d.ageMonths, childAgeMonths),
+      }));
+      const ids = new Set(updates.map((u) => u.id));
+      setSchedule((prev) =>
+        prev.map((v) => {
+          const upd = updates.find((u) => u.id === v.id);
+          if (!upd) return v;
+          return { ...v, status: upd.naturalStatus, dateAdministered: undefined, provider: undefined, lotNumber: undefined, notes: undefined };
+        })
+      );
+      if (activeChild) {
+        ids.forEach((id) => vaccinesApi.remove(activeChild.id, id).catch(() => {}));
+      }
+    } else {
+      // Select all — mark each incomplete one as completed
+      const today = new Date().toISOString().split('T')[0];
+      const incompleteIds = new Set(doses.filter((d) => d.status !== 'completed').map((d) => d.id));
+      setSchedule((prev) =>
+        prev.map((v) =>
+          incompleteIds.has(v.id)
+            ? { ...v, status: 'completed' as VaccineStatus, dateAdministered: today }
+            : v
+        )
+      );
+      if (activeChild) {
+        incompleteIds.forEach((id) =>
+          vaccinesApi.upsert({
+            child_id: activeChild.id,
+            vaccine_id: id,
+            status: 'completed',
+            date_administered: today,
+          }).catch(() => {})
+        );
+      }
     }
   };
 
@@ -192,7 +274,7 @@ export const VaccineTracker = () => {
           Vaccine Schedule
         </Typography>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          Track immunizations against the CDC recommended schedule. Tap a group to see details.
+          Track immunizations against the CDC recommended schedule. Tap a group to see details and check off completed vaccines.
         </Typography>
       </Box>
 
@@ -250,6 +332,7 @@ export const VaccineTracker = () => {
           const groupStatus = getGroupStatus(doses);
           const isExpanded = expandedAge === ageLabel;
           const completedInGroup = doses.filter((d) => d.status === 'completed').length;
+          const allCompletedInGroup = completedInGroup === doses.length;
 
           return (
             <Card
@@ -283,7 +366,21 @@ export const VaccineTracker = () => {
 
                 {isExpanded && (
                   <Box sx={{ mt: 2 }}>
-                    <Divider sx={{ mb: 2 }} />
+                    <Divider sx={{ mb: 1.5 }} />
+                    <Box sx={{ mb: 1.5 }}>
+                      <Button
+                        size="small"
+                        variant="text"
+                        startIcon={allCompletedInGroup ? <RadioButtonUncheckedIcon /> : <CheckCircleIcon />}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSelectAll(doses);
+                        }}
+                        sx={{ fontSize: '0.8rem', textTransform: 'none' }}
+                      >
+                        {allCompletedInGroup ? 'Deselect All' : 'Select All'}
+                      </Button>
+                    </Box>
                     <Stack spacing={1.5}>
                       {doses.map((dose) => (
                         <VaccineCard key={dose.id} status={dose.status} elevation={0} sx={{ bgcolor: '#FAFBFC' }}>
@@ -319,22 +416,25 @@ export const VaccineTracker = () => {
                                   </Stack>
                                 )}
                               </Box>
-                              {(dose.status === 'due' || dose.status === 'overdue') && (
-                                <Button
-                                  size="small"
-                                  variant="outlined"
-                                  color={dose.status === 'overdue' ? 'error' : 'warning'}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleMarkComplete(dose.id);
-                                  }}
-                                >
-                                  Mark Complete
-                                </Button>
-                              )}
-                              {dose.status === 'completed' && (
-                                <CheckCircleIcon sx={{ color: statusConfig.completed.color, fontSize: 20 }} />
-                              )}
+                              <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleToggle(dose.id);
+                                }}
+                                sx={{
+                                  color: dose.status === 'completed' ? statusConfig.completed.color : '#BDBDBD',
+                                  '&:hover': {
+                                    color: dose.status === 'completed' ? '#388E3C' : '#4CAF50',
+                                    bgcolor: dose.status === 'completed' ? '#FFEBEE' : '#E8F5E9',
+                                  },
+                                }}
+                              >
+                                {dose.status === 'completed'
+                                  ? <CheckCircleIcon />
+                                  : <RadioButtonUncheckedIcon />
+                                }
+                              </IconButton>
                             </Stack>
                           </CardContent>
                         </VaccineCard>

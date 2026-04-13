@@ -21,7 +21,7 @@ import { useNavigate } from 'react-router-dom';
 import { useChildren } from '../../context/ChildContext';
 import { getMilestonesForChild } from '../../data/milestones';
 import { milestonesApi, vaccinesApi } from '../../services/api';
-import { initialSchedule } from './VaccineTracker';
+import { initialSchedule, computeNaturalStatus } from './VaccineTracker';
 import {
   HEIGHT_BOYS_CM,
   HEIGHT_GIRLS_CM,
@@ -128,18 +128,23 @@ export const Dashboard = () => {
       setMilestoneCompleted(relevant);
     }).catch(() => {});
 
-    // Load vaccines — merge API records with initial schedule defaults
+    // Load vaccines — compute natural statuses from child's age, then overlay API records
     vaccinesApi.list(activeChild.id).then((records) => {
       const merged = initialSchedule.map((dose) => {
+        const naturalStatus = computeNaturalStatus(dose.ageMonths, ageMonthsVal);
         const record = records.find((r) => r.vaccine_id === dose.id);
-        return record ? { ...dose, status: record.status } : dose;
+        return record ? { ...dose, status: record.status } : { ...dose, status: naturalStatus };
       });
       setVaccineCompleted(merged.filter((v) => v.status === 'completed').length);
       setVaccineDue(merged.filter((v) => v.status === 'due' || v.status === 'overdue').length);
     }).catch(() => {
-      // Fall back to initial schedule defaults
-      setVaccineCompleted(initialSchedule.filter((v) => v.status === 'completed').length);
-      setVaccineDue(initialSchedule.filter((v) => v.status === 'due' || v.status === 'overdue').length);
+      // Fall back to natural statuses (no completions without API data)
+      const base = initialSchedule.map((dose) => ({
+        ...dose,
+        status: computeNaturalStatus(dose.ageMonths, ageMonthsVal),
+      }));
+      setVaccineCompleted(0);
+      setVaccineDue(base.filter((v) => v.status === 'due' || v.status === 'overdue').length);
     });
   }, [activeChild, ageMonthsVal]);
 

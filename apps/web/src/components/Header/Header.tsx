@@ -134,7 +134,7 @@ export const Header = () => {
                 size="small"
                 startIcon={<SearchIcon />}
                 onClick={() => navigate('/')}
-                sx={{ borderRadius: 3, px: 2, fontWeight: 600, fontSize: '0.85rem', whiteSpace: 'nowrap' }}
+                sx={{ borderRadius: 3, px: 2, fontWeight: 600, fontSize: '0.85rem', whiteSpace: 'nowrap', mr: 2 }}
               >
                 Ask a Question
               </Button>
