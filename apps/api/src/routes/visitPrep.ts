@@ -1,20 +1,41 @@
 import { Router } from 'express';
 import { supabase } from '../supabase';
+import { verifyChildOwnership } from '../middleware/verifyChildOwnership';
 
 const router = Router();
 
 // GET all visit prep items (optionally filter by child_id)
 router.get('/', async (req, res) => {
-  let query = supabase
-    .from('visit_prep_items')
-    .select('*')
-    .order('added_at', { ascending: true });
+  const childId = req.query.child_id as string | undefined;
 
-  if (req.query.child_id) {
-    query = query.eq('child_id', req.query.child_id as string);
+  if (childId) {
+    const owns = await verifyChildOwnership(childId, req.userId!);
+    if (!owns) return res.status(403).json({ error: 'Access denied' });
+
+    const { data, error } = await supabase
+      .from('visit_prep_items')
+      .select('*')
+      .eq('child_id', childId)
+      .order('added_at', { ascending: true });
+
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json(data);
   }
 
-  const { data, error } = await query;
+  // No child_id filter: return items for all of the user's children
+  const { data: userChildren } = await supabase
+    .from('children')
+    .select('id')
+    .eq('user_id', req.userId!);
+
+  const childIds = (userChildren || []).map((c) => c.id);
+  if (childIds.length === 0) return res.json([]);
+
+  const { data, error } = await supabase
+    .from('visit_prep_items')
+    .select('*')
+    .in('child_id', childIds)
+    .order('added_at', { ascending: true });
 
   if (error) return res.status(500).json({ error: error.message });
   res.json(data);
@@ -23,6 +44,9 @@ router.get('/', async (req, res) => {
 // POST create visit prep item
 router.post('/', async (req, res) => {
   const { child_id, question, source } = req.body;
+
+  const owns = await verifyChildOwnership(child_id, req.userId!);
+  if (!owns) return res.status(403).json({ error: 'Access denied' });
 
   const { data, error } = await supabase
     .from('visit_prep_items')
@@ -36,6 +60,16 @@ router.post('/', async (req, res) => {
 
 // DELETE visit prep item
 router.delete('/:id', async (req, res) => {
+  const { data: item } = await supabase
+    .from('visit_prep_items')
+    .select('child_id')
+    .eq('id', req.params.id)
+    .single();
+  if (!item) return res.status(404).json({ error: 'Not found' });
+
+  const owns = await verifyChildOwnership(item.child_id, req.userId!);
+  if (!owns) return res.status(403).json({ error: 'Access denied' });
+
   const { error } = await supabase
     .from('visit_prep_items')
     .delete()
@@ -47,6 +81,9 @@ router.delete('/:id', async (req, res) => {
 
 // DELETE all visit prep items for a child
 router.delete('/clear/:childId', async (req, res) => {
+  const owns = await verifyChildOwnership(req.params.childId, req.userId!);
+  if (!owns) return res.status(403).json({ error: 'Access denied' });
+
   const { error } = await supabase
     .from('visit_prep_items')
     .delete()

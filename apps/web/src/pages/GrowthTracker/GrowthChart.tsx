@@ -443,16 +443,40 @@ export const GrowthChart = () => {
     const percentileLookup = new Map(heightData.map((row) => [row[0], row]));
     const sortedPercentileRows = [...heightData].sort((a, b) => a[0] - b[0]);
 
-    // Build projection lookup
-    const projLookup = new Map<number, { projected: number; low: number; high: number }>();
+    // Build projection data at fixed ages, then interpolate for all months
+    const projFixedPoints: { age: number; projected: number; low: number; high: number }[] = [];
     PROJECTION_AGES_YEARS.forEach((ageYears, i) => {
       const projectedCm = baseCurve[i] * scaleFactor;
-      projLookup.set(ageYears * 12, {
+      projFixedPoints.push({
+        age: ageYears * 12,
         projected: projectedCm,
         low: projectedCm * (prediction.low / prediction.predicted),
         high: projectedCm * (prediction.high / prediction.predicted)
       });
     });
+
+    const interpolateProjection = (ageMonths: number): { projected: number; low: number; high: number } | null => {
+      if (ageMonths < projFixedPoints[0].age || ageMonths > projFixedPoints[projFixedPoints.length - 1].age) return null;
+      // Exact match
+      const exact = projFixedPoints.find((p) => p.age === ageMonths);
+      if (exact) return exact;
+      // Interpolate between surrounding points
+      for (let i = 0; i < projFixedPoints.length - 1; i++) {
+        const before = projFixedPoints[i];
+        const after = projFixedPoints[i + 1];
+        if (before.age <= ageMonths && after.age >= ageMonths) {
+          const range = after.age - before.age;
+          const t = range === 0 ? 0 : (ageMonths - before.age) / range;
+          const lerp = (a: number, b: number) => Math.round((a + (b - a) * t) * 100) / 100;
+          return {
+            projected: lerp(before.projected, after.projected),
+            low: lerp(before.low, after.low),
+            high: lerp(before.high, after.high)
+          };
+        }
+      }
+      return null;
+    };
 
     const childHeightMeasurements = measurements.height;
 
@@ -480,7 +504,7 @@ export const GrowthChart = () => {
       if (!pRow && ageMonths <= sortedPercentileRows[sortedPercentileRows.length - 1][0]) {
         pRow = interpolatePercentile(ageMonths);
       }
-      const proj = projLookup.get(ageMonths);
+      const proj = interpolateProjection(ageMonths);
       const childMeas = childHeightMeasurements.find((m) => m.ageMonths === ageMonths);
 
       return {
@@ -493,7 +517,7 @@ export const GrowthChart = () => {
           p85: toDisplay(pRow[4], 'height', unitSystem),
           p97: toDisplay(pRow[5], 'height', unitSystem),
         } : {}),
-        // Projection line (0-18y)
+        // Projection line (0-18y), interpolated at every age
         ...(proj ? {
           projected: toDisplay(proj.projected, 'height', unitSystem),
           projLow: toDisplay(proj.low, 'height', unitSystem),
@@ -798,7 +822,7 @@ export const GrowthChart = () => {
 
           {/* Chart controls + AI insight actions above the chart */}
           {metric === 'height' && (
-            <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap sx={{ mb: 2 }}>
+            <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap sx={{ mb: 2 }}>
               {prediction && (
                 <FormControlLabel
                   control={
@@ -809,51 +833,58 @@ export const GrowthChart = () => {
                     />
                   }
                   label="Show projection to adulthood (0–18 years)"
-                  sx={{ mr: 'auto' }}
                 />
               )}
               {prediction && (
-                <Chip
-                  icon={<AutoAwesomeIcon />}
-                  label="Understand prediction"
+                <Button
+                  startIcon={<AutoAwesomeIcon />}
                   onClick={() => setPredictionInsightTrigger((prev) => prev + 1)}
                   variant="outlined"
                   color="secondary"
-                  clickable
-                />
+                  size="small"
+                  sx={{ borderRadius: 5, textTransform: 'none', fontWeight: 600 }}
+                >
+                  Understand this prediction
+                </Button>
               )}
               {percentileRange && measurements.height.length >= 1 && (
-                <Chip
-                  icon={<SearchIcon />}
-                  label="Research height info"
+                <Button
+                  startIcon={<SearchIcon />}
                   onClick={() => setInsightTrigger((prev) => prev + 1)}
                   variant="outlined"
                   color="info"
-                  clickable
-                />
+                  size="small"
+                  sx={{ borderRadius: 5, textTransform: 'none', fontWeight: 600 }}
+                >
+                  Research height percentile
+                </Button>
               )}
             </Stack>
           )}
 
           {metric === 'weight' && measurements.weight.length >= 1 && (
-            <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap sx={{ mb: 2 }}>
-              <Chip
-                icon={<MonitorWeightIcon />}
-                label="Weight insight"
+            <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap sx={{ mb: 2 }}>
+              <Button
+                startIcon={<MonitorWeightIcon />}
                 onClick={() => setWeightInsightTrigger((prev) => prev + 1)}
                 variant="outlined"
                 color="success"
-                clickable
-              />
+                size="small"
+                sx={{ borderRadius: 5, textTransform: 'none', fontWeight: 600 }}
+              >
+                Weight insight
+              </Button>
               {percentileRange && (
-                <Chip
-                  icon={<SearchIcon />}
-                  label="Research weight info"
+                <Button
+                  startIcon={<SearchIcon />}
                   onClick={() => setInsightTrigger((prev) => prev + 1)}
                   variant="outlined"
                   color="info"
-                  clickable
-                />
+                  size="small"
+                  sx={{ borderRadius: 5, textTransform: 'none', fontWeight: 600 }}
+                >
+                  Research weight percentile
+                </Button>
               )}
             </Stack>
           )}
@@ -867,6 +898,8 @@ export const GrowthChart = () => {
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                     <XAxis
                       dataKey="age"
+                      type="number"
+                      domain={['dataMin', 'dataMax']}
                       label={{ value: 'Age (months)', position: 'insideBottomRight', offset: -5 }}
                       tickFormatter={(v) => v < 24 ? `${v}m` : `${Math.round(v / 12)}y`}
                     />
@@ -910,7 +943,7 @@ export const GrowthChart = () => {
                         stroke="#E91E63"
                         strokeDasharray="4 4"
                         strokeWidth={1.5}
-                        label={{ value: `Mother: ${combinedChart.motherHeight} ${heightUnit}`, fill: '#E91E63', fontSize: 11, position: 'right' }}
+                        label={{ value: `Mother: ${combinedChart.motherHeight} ${heightUnit}`, fill: '#E91E63', fontSize: 11, position: 'insideTopRight' }}
                       />
                     )}
                     {combinedChart.fatherHeight != null && (
@@ -919,7 +952,7 @@ export const GrowthChart = () => {
                         stroke="#1565C0"
                         strokeDasharray="4 4"
                         strokeWidth={1.5}
-                        label={{ value: `Father: ${combinedChart.fatherHeight} ${heightUnit}`, fill: '#1565C0', fontSize: 11, position: 'right' }}
+                        label={{ value: `Father: ${combinedChart.fatherHeight} ${heightUnit}`, fill: '#1565C0', fontSize: 11, position: 'insideTopRight' }}
                       />
                     )}
                     <ReferenceLine
@@ -927,7 +960,7 @@ export const GrowthChart = () => {
                       stroke="#7B1FA2"
                       strokeWidth={1}
                       strokeDasharray="2 2"
-                      label={{ value: `Predicted: ${combinedChart.predictedHeight} ${heightUnit}`, fill: '#7B1FA2', fontSize: 11, position: 'left' }}
+                      label={{ value: `Predicted: ${combinedChart.predictedHeight} ${heightUnit}`, fill: '#7B1FA2', fontSize: 11, position: 'insideBottomLeft' }}
                     />
 
                     <Scatter dataKey="childValue" fill="#FF5722" stroke="#FFFFFF" strokeWidth={2} r={6} name="childValue" />
@@ -944,6 +977,8 @@ export const GrowthChart = () => {
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                     <XAxis
                       dataKey="age"
+                      type="number"
+                      domain={['dataMin', 'dataMax']}
                       label={{ value: 'Age', position: 'insideBottomRight', offset: -5 }}
                       tickFormatter={(v) => v < 24 ? `${v}m` : `${Math.round(v / 12)}y`}
                     />

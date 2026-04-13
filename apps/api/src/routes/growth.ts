@@ -1,10 +1,14 @@
 import { Router } from 'express';
 import { supabase } from '../supabase';
+import { verifyChildOwnership } from '../middleware/verifyChildOwnership';
 
 const router = Router();
 
 // GET growth entries for a child
 router.get('/:childId', async (req, res) => {
+  const owns = await verifyChildOwnership(req.params.childId, req.userId!);
+  if (!owns) return res.status(403).json({ error: 'Access denied' });
+
   const { data, error } = await supabase
     .from('growth_entries')
     .select('*')
@@ -18,6 +22,9 @@ router.get('/:childId', async (req, res) => {
 // POST create growth entry
 router.post('/', async (req, res) => {
   const { child_id, weight_kg, height_cm, head_circumference_cm, recorded_at } = req.body;
+
+  const owns = await verifyChildOwnership(child_id, req.userId!);
+  if (!owns) return res.status(403).json({ error: 'Access denied' });
 
   const { data, error } = await supabase
     .from('growth_entries')
@@ -33,6 +40,17 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   const { weight_kg, height_cm, head_circumference_cm, recorded_at } = req.body;
 
+  // Look up the entry to find its child_id
+  const { data: entry } = await supabase
+    .from('growth_entries')
+    .select('child_id')
+    .eq('id', req.params.id)
+    .single();
+  if (!entry) return res.status(404).json({ error: 'Not found' });
+
+  const owns = await verifyChildOwnership(entry.child_id, req.userId!);
+  if (!owns) return res.status(403).json({ error: 'Access denied' });
+
   const { data, error } = await supabase
     .from('growth_entries')
     .update({ weight_kg, height_cm, head_circumference_cm, recorded_at })
@@ -46,6 +64,16 @@ router.put('/:id', async (req, res) => {
 
 // DELETE growth entry
 router.delete('/:id', async (req, res) => {
+  const { data: entry } = await supabase
+    .from('growth_entries')
+    .select('child_id')
+    .eq('id', req.params.id)
+    .single();
+  if (!entry) return res.status(404).json({ error: 'Not found' });
+
+  const owns = await verifyChildOwnership(entry.child_id, req.userId!);
+  if (!owns) return res.status(403).json({ error: 'Access denied' });
+
   const { error } = await supabase
     .from('growth_entries')
     .delete()

@@ -4,6 +4,7 @@ x-- Sprout Database Schema
 -- Children table
 CREATE TABLE children (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES auth.users(id),
   name TEXT NOT NULL,
   date_of_birth DATE NOT NULL,
   gender TEXT NOT NULL CHECK (gender IN ('male', 'female', 'other')),
@@ -35,6 +36,7 @@ CREATE TABLE visit_prep_items (
 );
 
 -- Indexes for faster lookups
+CREATE INDEX idx_children_user_id ON children(user_id);
 CREATE INDEX idx_growth_entries_child_id ON growth_entries(child_id);
 CREATE INDEX idx_visit_prep_items_child_id ON visit_prep_items(child_id);
 

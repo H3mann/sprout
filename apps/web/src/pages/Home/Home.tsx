@@ -12,6 +12,7 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
+import AssignmentIcon from '@mui/icons-material/Assignment';
 import QuestionAnswerIcon from '@mui/icons-material/QuestionAnswer';
 import SearchIcon from '@mui/icons-material/Search';
 import ShowChartIcon from '@mui/icons-material/ShowChart';
@@ -22,6 +23,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { AnswerCard } from '../../components/AnswerCard';
 import { MedicalLoader } from '../../components/MedicalLoader';
+import { useAuth } from '../../context/AuthContext';
 import { searchPerplexity, type PerplexityResult } from '../../services/perplexity';
 
 const HeroSection = styled(Box)(({ theme }) => ({
@@ -42,13 +44,13 @@ const FeatureCard = styled(Card)(() => ({
 }));
 
 const IconWrapper = styled(Box)(({ theme }) => ({
-  width: 56,
-  height: 56,
-  borderRadius: 12,
+  width: 44,
+  height: 44,
+  borderRadius: 10,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  marginBottom: theme.spacing(2)
+  marginBottom: theme.spacing(1.5)
 }));
 
 const TrustSection = styled(Box)(({ theme }) => ({
@@ -60,32 +62,39 @@ const TrustSection = styled(Box)(({ theme }) => ({
 
 const features = [
   {
-    icon: <ShowChartIcon sx={{ fontSize: 28, color: 'white' }} />,
+    icon: <ShowChartIcon sx={{ fontSize: 22, color: 'white' }} />,
     iconBg: '#4CAF50',
     title: 'Growth Tracking',
     description:
       'Monitor your child\'s height and weight against WHO and CDC percentile charts. See where they stand, track trends over time, and get adult height predictions using the Tanner method based on parental heights.'
   },
   {
-    icon: <VaccinesIcon sx={{ fontSize: 28, color: 'white' }} />,
+    icon: <VaccinesIcon sx={{ fontSize: 22, color: 'white' }} />,
     iconBg: '#FF9800',
     title: 'Vaccine Schedules',
     description:
       'Stay on top of your child\'s immunization schedule with personalized timelines based on their age. Track completed doses and keep a complete vaccination record in one place.'
   },
   {
-    icon: <QuestionAnswerIcon sx={{ fontSize: 28, color: 'white' }} />,
+    icon: <QuestionAnswerIcon sx={{ fontSize: 22, color: 'white' }} />,
     iconBg: '#2196F3',
     title: 'Ask a Question',
     description:
       'Have a health question? Get answers sourced from peer-reviewed medical literature and clinical guidelines — PubMed, NIH, AAP, and CDC. Real evidence, not forums or anecdotal advice.'
   },
   {
-    icon: <AutoAwesomeIcon sx={{ fontSize: 28, color: 'white' }} />,
+    icon: <AutoAwesomeIcon sx={{ fontSize: 22, color: 'white' }} />,
     iconBg: '#7B1FA2',
     title: 'Insights, Not Just Numbers',
     description:
       'Sprout doesn\'t just show you data — it helps you understand it. See where your child falls on growth percentiles, what their trajectory looks like, and get clear explanations of trends, predictions, and what it all means for your child\'s development.'
+  },
+  {
+    icon: <AssignmentIcon sx={{ fontSize: 22, color: 'white' }} />,
+    iconBg: '#00897B',
+    title: 'Visit Prep',
+    description:
+      'Walk into every appointment prepared. Create a visit prep document to organize your questions, save topics from your research, and make the most of your time with the pediatrician.'
   }
 ];
 
@@ -100,6 +109,7 @@ const suggestedQuestions = [
 
 export const Home = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [query, setQuery] = useState('');
   const [result, setResult] = useState<PerplexityResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -154,7 +164,7 @@ export const Home = () => {
               mb: 4
             }}
           >
-            Easily ask questions, track growth, milestones,vaccines, and make sense of the numbers. No forums or guesswork—only evidence-based insights from PubMed, NIH, AAP, and the CDC.
+            Easily ask questions, track growth, and make sense of the numbers.  No forums or guesswork—only evidence-based insights from PubMed, NIH, AAP, and the CDC.
           </Typography>
 
           {/* Search bar */}
@@ -278,7 +288,7 @@ export const Home = () => {
       )}
 
       {/* Features section */}
-      <Container maxWidth="lg" sx={{ py: 8 }}>
+      <Container maxWidth="xl" sx={{ py: 8, px: { xs: 2, lg: 6 } }}>
         <Typography variant="h2" textAlign="center" gutterBottom>
           Everything you need, nothing you don't
         </Typography>
@@ -294,20 +304,20 @@ export const Home = () => {
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' },
-            gap: 3
+            gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)', lg: 'repeat(5, 1fr)' },
+            gap: 2
           }}
         >
           {features.map((feature) => (
             <FeatureCard key={feature.title}>
-              <CardContent sx={{ p: 4, flexGrow: 1 }}>
+              <CardContent sx={{ p: 2.5, flexGrow: 1 }}>
                 <IconWrapper sx={{ backgroundColor: feature.iconBg }}>
                   {feature.icon}
                 </IconWrapper>
-                <Typography variant="h5" gutterBottom>
+                <Typography variant="body1" fontWeight={700} gutterBottom sx={{ fontSize: '0.95rem' }}>
                   {feature.title}
                 </Typography>
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.8rem', lineHeight: 1.5 }}>
                   {feature.description}
                 </Typography>
               </CardContent>
@@ -364,8 +374,13 @@ export const Home = () => {
           Join thousands of parents who trust Sprout for reliable, pediatrician-backed
           guidance on their child's health and development.
         </Typography>
-        <Button variant="contained" color="primary" size="large" onClick={() => navigate('/children')}>
-          Create Your Free Account
+        <Button
+          variant="contained"
+          color="primary"
+          size="large"
+          onClick={() => navigate(user ? '/children' : '/login')}
+        >
+          {user ? 'Go to Dashboard' : 'Create Your Free Account'}
         </Button>
       </Container>
     </Box>

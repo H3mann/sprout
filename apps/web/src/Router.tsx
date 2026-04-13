@@ -1,7 +1,9 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
 import { Header } from './components/Header/Header';
+import { ProtectedRoute } from './components/ProtectedRoute';
 import { AskQuestion } from './pages/AskQuestion/AskQuestion';
+import { AuthPage } from './pages/Auth/AuthPage';
 import { DosageCalculator } from './pages/DosageCalculator/DosageCalculator';
 import { GrowthTracker } from './pages/GrowthTracker/GrowthTracker';
 import { Home } from './pages/Home/Home';
@@ -14,11 +16,12 @@ export const Router = () => {
       <Header />
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/children" element={<MyChildren />} />
-        <Route path="/tracker" element={<GrowthTracker />} />
-        <Route path="/dosage" element={<DosageCalculator />} />
-        <Route path="/visit-prep" element={<VisitPrep />} />
-        <Route path="/ask" element={<AskQuestion />} />
+        <Route path="/login" element={<AuthPage />} />
+        <Route path="/children" element={<ProtectedRoute><MyChildren /></ProtectedRoute>} />
+        <Route path="/tracker" element={<ProtectedRoute><GrowthTracker /></ProtectedRoute>} />
+        <Route path="/dosage" element={<ProtectedRoute><DosageCalculator /></ProtectedRoute>} />
+        <Route path="/visit-prep" element={<ProtectedRoute><VisitPrep /></ProtectedRoute>} />
+        <Route path="/ask" element={<ProtectedRoute><AskQuestion /></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   );

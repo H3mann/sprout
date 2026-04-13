@@ -36,6 +36,14 @@ export default defineConfig({
         target: 'http://localhost:3333',
         changeOrigin: true
       },
+      '/api/vaccines': {
+        target: 'http://localhost:3333',
+        changeOrigin: true
+      },
+      '/api/milestones': {
+        target: 'http://localhost:3333',
+        changeOrigin: true
+      },
       '/api/health': {
         target: 'http://localhost:3333',
         changeOrigin: true

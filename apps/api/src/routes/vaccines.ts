@@ -1,10 +1,14 @@
 import { Router } from 'express';
 import { supabase } from '../supabase';
+import { verifyChildOwnership } from '../middleware/verifyChildOwnership';
 
 const router = Router();
 
 // GET vaccine records for a child
 router.get('/:childId', async (req, res) => {
+  const owns = await verifyChildOwnership(req.params.childId, req.userId!);
+  if (!owns) return res.status(403).json({ error: 'Access denied' });
+
   const { data, error } = await supabase
     .from('vaccine_records')
     .select('*')
@@ -18,6 +22,9 @@ router.get('/:childId', async (req, res) => {
 // POST/upsert vaccine record
 router.post('/', async (req, res) => {
   const { child_id, vaccine_id, status, date_administered, provider, lot_number, notes } = req.body;
+
+  const owns = await verifyChildOwnership(child_id, req.userId!);
+  if (!owns) return res.status(403).json({ error: 'Access denied' });
 
   const { data, error } = await supabase
     .from('vaccine_records')
@@ -34,6 +41,9 @@ router.post('/', async (req, res) => {
 
 // DELETE vaccine record
 router.delete('/:childId/:vaccineId', async (req, res) => {
+  const owns = await verifyChildOwnership(req.params.childId, req.userId!);
+  if (!owns) return res.status(403).json({ error: 'Access denied' });
+
   const { error } = await supabase
     .from('vaccine_records')
     .delete()

@@ -3,6 +3,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
+import { AuthProvider } from './context/AuthContext';
 import { ChildProvider } from './context/ChildContext';
 import { VisitPrepProvider } from './context/VisitPrepContext';
 import { Router } from './Router';
@@ -23,14 +24,16 @@ export const App = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <QueryClientProvider client={queryClient}>
-        <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-right" />
-        <ChildProvider>
-          <VisitPrepProvider>
-            <Router />
-          </VisitPrepProvider>
-        </ChildProvider>
-      </QueryClientProvider>
+      <AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-right" />
+          <ChildProvider>
+            <VisitPrepProvider>
+              <Router />
+            </VisitPrepProvider>
+          </ChildProvider>
+        </QueryClientProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 };

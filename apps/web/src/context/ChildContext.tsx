@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import { childrenApi, type ApiChild } from '../services/api';
+import { useAuth } from './AuthContext';
 
 export interface Child {
   id: string;
@@ -40,6 +41,7 @@ function toChild(api: ApiChild): Child {
 }
 
 export function ChildProvider({ children: reactChildren }: { children: ReactNode }) {
+  const { user } = useAuth();
   const [children, setChildren] = useState<Child[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeChildId, setActiveChildId] = useState<string>(
@@ -48,15 +50,22 @@ export function ChildProvider({ children: reactChildren }: { children: ReactNode
 
   const activeChild = children.find((c) => c.id === activeChildId) || children[0] || null;
 
-  // Load children from API on mount
+  // Load children from API when user changes
   useEffect(() => {
+    if (!user) {
+      setChildren([]);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
     childrenApi.list()
       .then((data) => {
         setChildren(data.map(toChild));
       })
       .catch((err) => console.error('Failed to load children:', err))
       .finally(() => setLoading(false));
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (activeChild) {

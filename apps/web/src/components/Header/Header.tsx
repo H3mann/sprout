@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import AppBar from '@mui/material/AppBar';
+import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
@@ -11,23 +12,27 @@ import List from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 import Toolbar from '@mui/material/Toolbar';
+import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
+import AssignmentIcon from '@mui/icons-material/Assignment';
 import ChildCareIcon from '@mui/icons-material/ChildCare';
 import CloseIcon from '@mui/icons-material/Close';
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
+import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import PeopleIcon from '@mui/icons-material/People';
+import RestaurantIcon from '@mui/icons-material/Restaurant';
 import SearchIcon from '@mui/icons-material/Search';
 import ShowChartIcon from '@mui/icons-material/ShowChart';
 import VaccinesIcon from '@mui/icons-material/Vaccines';
-import AssignmentIcon from '@mui/icons-material/Assignment';
-import RestaurantIcon from '@mui/icons-material/Restaurant';
-import Tooltip from '@mui/material/Tooltip';
 import { useNavigate, useLocation } from 'react-router-dom';
 
+import { useAuth } from '../../context/AuthContext';
 import { useChildren } from '../../context/ChildContext';
 import { useVisitPrep } from '../../context/VisitPrepContext';
 
@@ -67,13 +72,22 @@ const menuItems = [
 export const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, signOut } = useAuth();
   const { activeChild, getAgeDisplay } = useChildren();
   const { items } = useVisitPrep();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleNav = (path: string) => {
     setDrawerOpen(false);
     navigate(path);
+  };
+
+  const handleSignOut = async () => {
+    setAnchorEl(null);
+    setDrawerOpen(false);
+    await signOut();
+    navigate('/');
   };
 
   return (
@@ -103,13 +117,17 @@ export const Header = () => {
             </Box>
 
             <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'nowrap' }}>
-              <NavButton onClick={() => navigate('/children')}>My Children</NavButton>
-              <NavButton onClick={() => navigate('/tracker')}>Growth Tracker</NavButton>
-              <NavButton onClick={() => navigate('/dosage')}>Dosage Calculator</NavButton>
-              <NavButton onClick={() => navigate('/visit-prep')}>
-                Visit Prep{items.length > 0 ? ` (${items.length})` : ''}
-              </NavButton>
-              <NavButton onClick={() => navigate('/ask')}>FAQ & Research</NavButton>
+              {user && (
+                <>
+                  <NavButton onClick={() => navigate('/children')}>My Children</NavButton>
+                  <NavButton onClick={() => navigate('/tracker')}>Growth Tracker</NavButton>
+                  <NavButton onClick={() => navigate('/dosage')}>Dosage Calculator</NavButton>
+                  <NavButton onClick={() => navigate('/visit-prep')}>
+                    Visit Prep{items.length > 0 ? ` (${items.length})` : ''}
+                  </NavButton>
+                  <NavButton onClick={() => navigate('/ask')}>FAQ & Research</NavButton>
+                </>
+              )}
               <Button
                 variant="contained"
                 color="primary"
@@ -121,9 +139,17 @@ export const Header = () => {
                 Ask a Question
               </Button>
 
-              {activeChild ? (
+              {user && activeChild && (
                 <Chip
-                  icon={<ChildCareIcon />}
+                  avatar={
+                    activeChild.photoUrl ? (
+                      <Avatar src={activeChild.photoUrl} alt={activeChild.name} />
+                    ) : (
+                      <Avatar sx={{ bgcolor: 'primary.main', width: 24, height: 24, fontSize: '0.7rem' }}>
+                        {activeChild.name.charAt(0).toUpperCase()}
+                      </Avatar>
+                    )
+                  }
                   label={`${activeChild.name} (${getAgeDisplay(activeChild)})`}
                   color="primary"
                   variant="outlined"
@@ -131,14 +157,43 @@ export const Header = () => {
                   onClick={() => navigate('/children')}
                   sx={{ fontWeight: 600, cursor: 'pointer' }}
                 />
+              )}
+
+              {user ? (
+                <>
+                  <IconButton onClick={(e) => setAnchorEl(e.currentTarget)} size="small">
+                    <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main', fontSize: '0.85rem' }}>
+                      {user.email?.charAt(0).toUpperCase()}
+                    </Avatar>
+                  </IconButton>
+                  <Menu
+                    anchorEl={anchorEl}
+                    open={Boolean(anchorEl)}
+                    onClose={() => setAnchorEl(null)}
+                    transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                    anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                  >
+                    <MenuItem disabled>
+                      <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>
+                        {user.email}
+                      </Typography>
+                    </MenuItem>
+                    <Divider />
+                    <MenuItem onClick={handleSignOut}>
+                      <ListItemIcon><LogoutIcon fontSize="small" /></ListItemIcon>
+                      Sign Out
+                    </MenuItem>
+                  </Menu>
+                </>
               ) : (
                 <Button
-                  variant="contained"
+                  variant="outlined"
                   color="primary"
                   size="small"
-                  onClick={() => navigate('/children')}
+                  onClick={() => navigate('/login')}
+                  sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}
                 >
-                  Add Child
+                  Sign In
                 </Button>
               )}
             </Box>
@@ -162,10 +217,18 @@ export const Header = () => {
           </Box>
           <Divider />
 
-          {activeChild && (
-            <Box sx={{ px: 2, py: 1.5, bgcolor: 'primary.light', bgcolor2: '#f5f5f5' }}>
+          {user && activeChild && (
+            <Box sx={{ px: 2, py: 1.5 }}>
               <Chip
-                icon={<ChildCareIcon />}
+                avatar={
+                  activeChild.photoUrl ? (
+                    <Avatar src={activeChild.photoUrl} alt={activeChild.name} />
+                  ) : (
+                    <Avatar sx={{ bgcolor: 'primary.main', width: 24, height: 24, fontSize: '0.7rem' }}>
+                      {activeChild.name.charAt(0).toUpperCase()}
+                    </Avatar>
+                  )
+                }
                 label={`${activeChild.name} (${getAgeDisplay(activeChild)})`}
                 color="primary"
                 variant="outlined"
@@ -221,6 +284,41 @@ export const Header = () => {
               );
             })}
           </List>
+
+          {user && (
+            <>
+              <Divider />
+              <List>
+                <ListItemButton onClick={handleSignOut} sx={{ py: 1.5 }}>
+                  <ListItemIcon sx={{ minWidth: 40, color: 'text.secondary' }}>
+                    <LogoutIcon />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="Sign Out"
+                    secondary={user.email}
+                    primaryTypographyProps={{ fontSize: '0.95rem' }}
+                    secondaryTypographyProps={{ fontSize: '0.75rem' }}
+                  />
+                </ListItemButton>
+              </List>
+            </>
+          )}
+
+          {!user && (
+            <>
+              <Divider />
+              <Box sx={{ p: 2 }}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  fullWidth
+                  onClick={() => handleNav('/login')}
+                >
+                  Sign In
+                </Button>
+              </Box>
+            </>
+          )}
         </Box>
       </Drawer>
     </>
