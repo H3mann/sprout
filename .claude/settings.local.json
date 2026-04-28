@@ -2,7 +2,12 @@
   "permissions": {
     "allow": [
       "Bash(curl -s -X POST https://api.perplexity.ai/v1/responses -H 'Authorization: Bearer __CMDSUB_OUTPUT__')",
-      "Bash(python3 -m json.tool)"
+      "Bash(python3 -m json.tool)",
+      "Bash(mkdir -p /tmp/sprout-snapshot)",
+      "Bash(cp apps/api/src/services/strategyMatcher.ts /tmp/sprout-snapshot/strategyMatcher.ts)",
+      "Bash(cp apps/api/src/routes/realestate/ai.ts /tmp/sprout-snapshot/ai.ts)",
+      "Bash(cp apps/realestate-web/src/services/api.ts /tmp/sprout-snapshot/api.ts)",
+      "Bash(cp apps/realestate-web/src/pages/DealStrategy/DealStrategy.tsx /tmp/sprout-snapshot/DealStrategy.tsx)"
     ]
   }
 }

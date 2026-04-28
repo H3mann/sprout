@@ -6,13 +6,17 @@ import rateLimit from 'express-rate-limit';
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-import { requireAuth } from './middleware/auth';
+import { requireAuth, buildOptionalAuth } from './middleware/auth';
+import { realmSupabase } from './supabase';
 import childrenRouter from './routes/children';
 import growthRouter from './routes/growth';
 import milestonesRouter from './routes/milestones';
 import vaccinesRouter from './routes/vaccines';
 import searchRouter from './routes/search';
 import visitPrepRouter from './routes/visitPrep';
+import realestateRouter from './routes/realestate';
+
+const realmOptionalAuth = buildOptionalAuth(realmSupabase);
 
 const app = express();
 const PORT = process.env.PORT || 3333;
@@ -69,6 +73,7 @@ app.use('/api/growth', requireAuth, growthRouter);
 app.use('/api/milestones', requireAuth, milestonesRouter);
 app.use('/api/vaccines', requireAuth, vaccinesRouter);
 app.use('/api/visit-prep', requireAuth, visitPrepRouter);
+app.use('/api/realestate', realmOptionalAuth, realestateRouter);
 
 // Global error handler — catch unhandled errors, return generic message
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
