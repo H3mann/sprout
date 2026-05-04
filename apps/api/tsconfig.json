@@ -4,6 +4,7 @@
     "module": "CommonJS",
     "moduleResolution": "node",
     "outDir": "../../dist/apps/api",
+    "rootDir": ".",
     "types": ["node"]
   },
   "include": ["src/**/*.ts"]
