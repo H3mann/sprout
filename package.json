@@ -17,7 +17,7 @@
     "build:api": "npx nx build api",
     "build:web": "npx nx build web",
     "build:realestate-web": "npx nx build realestate-web",
-    "start:api": "node dist/apps/api/src/main.js",
+    "start:api": "npx tsx apps/api/src/main.ts",
     "dep-graph": "nx graph",
     "postinstall": "husky install"
   },
@@ -45,7 +45,8 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^6.11.2",
-    "recharts": "^3.8.1"
+    "recharts": "^3.8.1",
+    "tsx": "^4.21.0"
   },
   "devDependencies": {
     "@nx/eslint": "^21.6.6",
@@ -73,7 +74,6 @@
     "jsdom": "~22.1.0",
     "nx": "^21.6.6",
     "prettier": "^2.8.8",
-    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.40.0",
     "vite": "^7.1.9",
