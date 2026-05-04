@@ -45,7 +45,7 @@ export const AuthPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = (location.state as { from?: string })?.from || '/neighborhood';
+  const from = (location.state as { from?: string })?.from || '/';
   const isLogin = tab === 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -83,10 +83,7 @@ export const AuthPage = () => {
           setError(err);
           return;
         }
-        setSuccess('Account created! Check your email to confirm, then sign in.');
-        setTab(0);
-        setPassword('');
-        setConfirmPassword('');
+        navigate(from, { replace: true });
       }
     } finally {
       setSubmitting(false);

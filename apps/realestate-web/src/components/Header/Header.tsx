@@ -1,15 +1,19 @@
 import { useState } from 'react';
 import AppBar from '@mui/material/AppBar';
+import Autocomplete from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import Drawer from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
+import InputAdornment from '@mui/material/InputAdornment';
 import List from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
+import TextField from '@mui/material/TextField';
 import Toolbar from '@mui/material/Toolbar';
+import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import AnalyticsIcon from '@mui/icons-material/Analytics';
@@ -17,12 +21,17 @@ import BookmarkIcon from '@mui/icons-material/Bookmark';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import HomeIcon from '@mui/icons-material/Home';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
 import MapIcon from '@mui/icons-material/Map';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { LOCATION_OPTIONS, useSearchLocation } from '../../context/LocationContext';
+
+const LOCATION_TOOLTIP =
+  'This location is added to your AI search to focus results. For more granular search (e.g., a specific city, ZIP, or neighborhood), include it directly in your search input.';
 
 const NAV_ITEMS = [
   { label: 'Deal Analyzer', path: '/deal-analyzer', icon: <CalculateIcon /> },
@@ -35,10 +44,57 @@ const NAV_ITEMS = [
 export const Header = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { user, signOut } = useAuth();
+  const { location: searchLocation, setLocation: setSearchLocation } = useSearchLocation();
   const navigate = useNavigate();
   const location = useLocation();
 
   const isActive = (path: string) => location.pathname.startsWith(path);
+
+  const locationPicker = (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, width: '100%' }}>
+      <Autocomplete
+        freeSolo
+        disableClearable
+        size="small"
+        fullWidth
+        options={LOCATION_OPTIONS}
+        value={searchLocation}
+        onChange={(_, val) => setSearchLocation(typeof val === 'string' ? val : searchLocation)}
+        onInputChange={(_, val, reason) => {
+          if (reason === 'input' || reason === 'clear') setSearchLocation(val);
+        }}
+        sx={{
+          flex: 1,
+          '& .MuiOutlinedInput-root': { bgcolor: 'background.default' },
+        }}
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            placeholder="Location"
+            InputProps={{
+              ...params.InputProps,
+              startAdornment: (
+                <InputAdornment position="start" sx={{ pl: 0.5 }}>
+                  <LocationOnIcon fontSize="small" color="primary" />
+                </InputAdornment>
+              ),
+            }}
+          />
+        )}
+      />
+      <Tooltip
+        title={LOCATION_TOOLTIP}
+        arrow
+        placement="bottom"
+        enterTouchDelay={0}
+        leaveTouchDelay={6000}
+      >
+        <IconButton size="small" aria-label="About the location filter" sx={{ color: 'text.secondary' }}>
+          <InfoOutlinedIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
+    </Box>
+  );
 
   return (
     <>
@@ -82,11 +138,15 @@ export const Header = () => {
             ))}
           </Box>
 
-          <Box sx={{ ml: 'auto' }}>
+          <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 1.5 } }}>
+            <Box sx={{ display: { xs: 'none', sm: 'block' }, width: { sm: 220, md: 260 } }}>
+              {locationPicker}
+            </Box>
+
             {user ? (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <AccountCircleIcon sx={{ color: 'text.secondary', display: { xs: 'none', sm: 'block' } }} />
-                <Typography variant="body2" sx={{ color: 'text.secondary', display: { xs: 'none', sm: 'block' } }}>
+                <AccountCircleIcon sx={{ color: 'text.secondary', display: { xs: 'none', md: 'block' } }} />
+                <Typography variant="body2" sx={{ color: 'text.secondary', display: { xs: 'none', md: 'block' } }}>
                   {user.email}
                 </Typography>
                 <IconButton onClick={signOut} size="small" sx={{ color: 'text.secondary' }}>
@@ -100,6 +160,18 @@ export const Header = () => {
             )}
           </Box>
         </Toolbar>
+
+        <Box
+          sx={{
+            display: { xs: 'flex', sm: 'none' },
+            justifyContent: 'center',
+            px: 2,
+            pb: 1,
+            pt: 0.5,
+          }}
+        >
+          <Box sx={{ width: '100%', maxWidth: 360 }}>{locationPicker}</Box>
+        </Box>
       </AppBar>
 
       <Drawer anchor="left" open={drawerOpen} onClose={() => setDrawerOpen(false)}>

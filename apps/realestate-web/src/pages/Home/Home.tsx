@@ -31,6 +31,7 @@ import BeachAccessIcon from '@mui/icons-material/BeachAccess';
 import { useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../../context/AuthContext';
+import { DEFAULT_LOCATION, useSearchLocation } from '../../context/LocationContext';
 import { aiApi, type PropertySuggestion, type InvestmentStrategy } from '../../services/api';
 
 const STRATEGY_ICONS: Record<string, React.ReactElement> = {
@@ -262,6 +263,7 @@ interface HistoryEntry {
 export const Home = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { location: searchLocation } = useSearchLocation();
   const [tab, setTab] = useState(0);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
@@ -314,15 +316,21 @@ export const Home = () => {
       setLoading(true);
       setError(null);
 
+      const trimmed = query.trim();
+      const locationApplied = searchLocation && searchLocation.trim() && searchLocation !== DEFAULT_LOCATION;
+      const augmentedQuery = locationApplied
+        ? `${trimmed} (Location focus: ${searchLocation.trim()})`
+        : trimmed;
+
       try {
         const result =
           tab === 1
-            ? await aiApi.discover(query.trim())
-            : await aiApi.screen(query.trim());
+            ? await aiApi.discover(augmentedQuery)
+            : await aiApi.screen(augmentedQuery);
 
         setHistory((prev) => [
           {
-            query: query.trim(),
+            query: trimmed,
             response: result.response,
             type: tab === 1 ? 'discover' : 'screen',
             timestamp: new Date(),
@@ -335,8 +343,8 @@ export const Home = () => {
 
         // Use strategy-specific endpoint if filter is selected
         const suggestionPromise = selectedStrategy
-          ? aiApi.suggestionsByStrategy(selectedStrategy, query.trim(), 8)
-          : aiApi.suggestions(query.trim());
+          ? aiApi.suggestionsByStrategy(selectedStrategy, augmentedQuery, 8)
+          : aiApi.suggestions(augmentedQuery);
 
         suggestionPromise.then((suggestionsResult) => {
           setPropertySuggestions(suggestionsResult.properties);
@@ -349,7 +357,7 @@ export const Home = () => {
         setLoading(false);
       }
     },
-    [query, tab, user, navigate],
+    [query, tab, user, navigate, searchLocation, selectedStrategy],
   );
 
   const handlePropertyClick = (property: PropertySuggestion) => {
@@ -390,15 +398,42 @@ export const Home = () => {
     <Box>
       <HeroSection>
         <Container maxWidth="md">
-          <Typography variant="h3" sx={{ fontWeight: 700, mb: 1.5 }}>
+          <Typography
+            variant="h3"
+            sx={{
+              fontWeight: 700,
+              mb: 1.5,
+              fontSize: { xs: '1.75rem', sm: '2.25rem', md: '3rem' },
+              px: { xs: 2, sm: 0 },
+            }}
+          >
             Analyze any property in less than 60 seconds
           </Typography>
-          <Typography variant="h6" sx={{ fontWeight: 400, mb: 3, opacity: 0.9, maxWidth: 640, mx: 'auto' }}>
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 400,
+              mb: 3,
+              opacity: 0.9,
+              maxWidth: 640,
+              mx: 'auto',
+              fontSize: { xs: '0.95rem', sm: '1.1rem', md: '1.25rem' },
+              px: { xs: 2, sm: 0 },
+            }}
+          >
             Our AI cross-references market comps, rental data, neighborhood trends, and financial
             metrics so you can make smarter investment decisions — backed by data, not gut feelings.
           </Typography>
 
-          <Box sx={{ bgcolor: 'rgba(255,255,255,0.95)', borderRadius: 3, p: 3, textAlign: 'left' }}>
+          <Box
+            sx={{
+              bgcolor: 'rgba(255,255,255,0.95)',
+              borderRadius: 3,
+              p: { xs: 2, sm: 3 },
+              mx: { xs: 1.5, sm: 0 },
+              textAlign: 'left',
+            }}
+          >
             <Tabs
               value={tab}
               onChange={(_, v) => setTab(v)}
@@ -461,7 +496,15 @@ export const Home = () => {
               </Box>
             )}
 
-            <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', gap: 1 }}>
+            <Box
+              component="form"
+              onSubmit={handleSubmit}
+              sx={{
+                display: 'flex',
+                flexDirection: { xs: 'column', sm: 'row' },
+                gap: 1,
+              }}
+            >
               <TextField
                 fullWidth
                 multiline
@@ -481,7 +524,11 @@ export const Home = () => {
                 variant="contained"
                 startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SearchIcon />}
                 disabled={loading || !query.trim()}
-                sx={{ minWidth: 120, alignSelf: 'flex-end' }}
+                sx={{
+                  minWidth: { sm: 120 },
+                  alignSelf: { xs: 'stretch', sm: 'flex-end' },
+                  py: { xs: 1.25, sm: 1 },
+                }}
               >
                 {loading ? 'Searching...' : tab === 1 ? 'Discover' : 'Screen'}
               </Button>
@@ -526,8 +573,14 @@ export const Home = () => {
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                 <AutoAwesomeIcon color="secondary" />
-                <Typography variant="h5">Suggested Properties</Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ ml: 'auto' }}>
+                <Typography variant="h5" sx={{ fontSize: { xs: '1.15rem', sm: '1.5rem' } }}>
+                  Suggested Properties
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ ml: 'auto', display: { xs: 'none', sm: 'block' } }}
+                >
                   Click a property to analyze the deal
                 </Typography>
               </Box>
