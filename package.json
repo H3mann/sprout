@@ -14,6 +14,10 @@
     "affected:lint": "nx affected --target=lint",
     "format": "nx format:write",
     "format:check": "nx format:check",
+    "build:api": "npx nx build api",
+    "build:web": "npx nx build web",
+    "build:realestate-web": "npx nx build realestate-web",
+    "start:api": "node dist/apps/api/src/main.js",
     "dep-graph": "nx graph",
     "postinstall": "husky install"
   },
