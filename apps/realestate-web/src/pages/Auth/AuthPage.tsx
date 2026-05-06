@@ -83,7 +83,7 @@ export const AuthPage = () => {
           setError(err);
           return;
         }
-        navigate(from, { replace: true });
+        setSuccess('Check your email for a confirmation link to complete sign up.');
       }
     } finally {
       setSubmitting(false);
