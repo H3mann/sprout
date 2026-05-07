@@ -1,4 +1,5 @@
 import express from 'express';
+import helmet from 'helmet';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -20,6 +21,8 @@ const realmOptionalAuth = buildOptionalAuth(realmSupabase);
 
 const app = express();
 const PORT = process.env.PORT || 3333;
+
+app.use(helmet());
 
 // CORS — supports comma-separated origins via CORS_ORIGIN env var
 const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:4200')
