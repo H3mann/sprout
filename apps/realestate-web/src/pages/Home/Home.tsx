@@ -380,6 +380,8 @@ export const Home = () => {
         latitude: property.latitude || 0,
         longitude: property.longitude || 0,
         allSuggestions: propertySuggestions,
+        sqft: property.sqft || 0,
+        estimated_rehab_cost: property.estimated_rehab_cost || 0,
       },
     });
   };

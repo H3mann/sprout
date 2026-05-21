@@ -215,8 +215,8 @@ export function calculateStrategyFit(
       score += contribute(c, 'Walk Score', 'Location', `${walkScore}`, 20, `Highly walkable (${walkExcellent}+) — desirable location`);
     else if (walkScore != null && walkScore >= walkModerate)
       score += contribute(c, 'Walk Score', 'Location', `${walkScore}`, 10, `Moderately walkable (${walkModerate}+)`);
-    else
-      contribute(c, 'Walk Score', 'Location', walkScore != null ? `${walkScore}` : 'N/A', 0, walkScore != null ? `Below ${walkModerate} — limited appreciation signal` : 'Data not available');
+    else if (walkScore != null)
+      contribute(c, 'Walk Score', 'Location', `${walkScore}`, 0, `Below ${walkModerate} — limited appreciation signal`);
 
     const incomeStrong = t.minMedianIncome + 15000;
     const incomeWeak = Math.max(0, t.minMedianIncome - 20000);
@@ -226,8 +226,8 @@ export function calculateStrategyFit(
       score += contribute(c, 'Median Income', 'Location', `$${medianIncome.toLocaleString()}`, 10, `Meets $${t.minMedianIncome.toLocaleString()} target`);
     else if (medianIncome && medianIncome < incomeWeak)
       score += contribute(c, 'Median Income', 'Location', `$${medianIncome.toLocaleString()}`, -15, `Below $${incomeWeak.toLocaleString()} — lower appreciation potential`);
-    else
-      contribute(c, 'Median Income', 'Location', medianIncome ? `$${medianIncome.toLocaleString()}` : 'N/A', 0, medianIncome ? `Between $${incomeWeak.toLocaleString()}–$${t.minMedianIncome.toLocaleString()} — moderate` : 'Data not available');
+    else if (medianIncome)
+      contribute(c, 'Median Income', 'Location', `$${medianIncome.toLocaleString()}`, 0, `Between $${incomeWeak.toLocaleString()}–$${t.minMedianIncome.toLocaleString()} — moderate`);
 
     const capHigh = t.maxCapRate + 3;
     if (metrics.capRate <= t.maxCapRate)
@@ -260,8 +260,8 @@ export function calculateStrategyFit(
       score += contribute(c, 'Property Age', 'Property', `Built ${yearBuilt}`, 15, `Older than ${t.maxYearBuilt} — likely rehab opportunity`);
     else if (yearBuilt && yearBuilt > newishYear)
       score += contribute(c, 'Property Age', 'Property', `Built ${yearBuilt}`, -10, `Newer than ${newishYear} — limited rehab value-add`);
-    else
-      contribute(c, 'Property Age', 'Property', yearBuilt ? `Built ${yearBuilt}` : 'N/A', 0, yearBuilt ? 'Moderate age — some rehab potential' : 'Data not available');
+    else if (yearBuilt)
+      contribute(c, 'Property Age', 'Property', `Built ${yearBuilt}`, 0, 'Moderate age — some rehab potential');
 
     if (metrics.capRate >= t.minCapRate)
       score += contribute(c, 'Cap Rate', 'Cap Rate', `${metrics.capRate}%`, 15, `Strong returns (≥${t.minCapRate}%) after rehab`);
@@ -278,8 +278,8 @@ export function calculateStrategyFit(
       score += contribute(c, 'Crime Rate', 'Safety', `${crimeRate}`, -15, `Above ${t.maxCrimeRate} — risky for rehab investment`);
     else if (crimeRate && crimeRate < safeCrime)
       score += contribute(c, 'Crime Rate', 'Safety', `${crimeRate}`, 10, `Below ${safeCrime} — safe for rehab investment`);
-    else
-      contribute(c, 'Crime Rate', 'Safety', crimeRate != null ? `${crimeRate}` : 'N/A', 0, crimeRate != null ? 'Moderate crime level' : 'Data not available');
+    else if (crimeRate != null)
+      contribute(c, 'Crime Rate', 'Safety', `${crimeRate}`, 0, 'Moderate crime level');
 
     scores.push({
       strategy: 'BRRRR',
@@ -307,8 +307,8 @@ export function calculateStrategyFit(
       score += contribute(c, 'Year Built', 'Property', `${yearBuilt}`, 10, 'Relatively modern');
     else if (yearBuilt && yearBuilt < tooOldYear)
       score += contribute(c, 'Year Built', 'Property', `${yearBuilt}`, -15, `Older than ${tooOldYear} — likely needs work`);
-    else
-      contribute(c, 'Year Built', 'Property', yearBuilt ? `${yearBuilt}` : 'N/A', 0, yearBuilt ? 'Moderate age' : 'Data not available');
+    else if (yearBuilt)
+      contribute(c, 'Year Built', 'Property', `${yearBuilt}`, 0, 'Moderate age');
 
     if (metrics.monthlyCashFlow >= t.minMonthlyCashFlow)
       score += contribute(c, 'Monthly Cash Flow', 'Cash Flow', `$${metrics.monthlyCashFlow}`, 15, `Meets $${t.minMonthlyCashFlow}/mo from move-in`);
@@ -324,8 +324,8 @@ export function calculateStrategyFit(
       score += contribute(c, 'Flood Risk', 'Safety', floodRisk, 10, 'Low risk — good for turnkey');
     else if (floodRisk === 'High')
       score += contribute(c, 'Flood Risk', 'Safety', floodRisk, -15, 'High flood risk — maintenance concern');
-    else
-      contribute(c, 'Flood Risk', 'Safety', floodRisk || 'N/A', 0, floodRisk ? 'Moderate flood risk' : 'Data not available');
+    else if (floodRisk)
+      contribute(c, 'Flood Risk', 'Safety', floodRisk, 0, 'Moderate flood risk');
 
     scores.push({
       strategy: 'Turnkey',
@@ -350,8 +350,8 @@ export function calculateStrategyFit(
       score += contribute(c, 'Walk Score', 'Location', `${walkScore}`, 25, `Excellent walkability (${walkExcellent}+) — ideal for guests`);
     else if (walkScore != null && walkScore >= t.minWalkScore)
       score += contribute(c, 'Walk Score', 'Location', `${walkScore}`, 15, `Meets ${t.minWalkScore}+ target for STR`);
-    else
-      contribute(c, 'Walk Score', 'Location', walkScore != null ? `${walkScore}` : 'N/A', 0, walkScore != null ? `Below ${t.minWalkScore} — less appealing for STR` : 'Data not available');
+    else if (walkScore != null)
+      contribute(c, 'Walk Score', 'Location', `${walkScore}`, 0, `Below ${t.minWalkScore} — less appealing for STR`);
 
     if (metrics.cashOnCashReturn >= t.minCashOnCash)
       score += contribute(c, 'Cash-on-Cash', 'Cash Returns', `${metrics.cashOnCashReturn}%`, 20, `Meets ${t.minCashOnCash}% — STR premium`);
@@ -360,8 +360,8 @@ export function calculateStrategyFit(
 
     if (propertyType?.toLowerCase().includes('condo'))
       score += contribute(c, 'Property Type', 'Property', propertyType, 10, 'Condos perform well as STR');
-    else
-      contribute(c, 'Property Type', 'Property', propertyType || 'N/A', 0, propertyType ? 'Not a condo — neutral for STR' : 'Data not available');
+    else if (propertyType)
+      contribute(c, 'Property Type', 'Property', propertyType, 0, 'Not a condo — neutral for STR');
 
     scores.push({
       strategy: 'Short-Term Rental',
@@ -388,18 +388,18 @@ export function calculateStrategyFit(
 
     if (isMultiFamily)
       score += contribute(c, 'Property Type', 'Property', propertyType!, 40, 'Multi-family — core house hack requirement');
-    else
-      contribute(c, 'Property Type', 'Property', propertyType || 'N/A', 0, propertyType ? 'Single-family — limited house hack potential' : 'Data not available');
+    else if (propertyType)
+      contribute(c, 'Property Type', 'Property', propertyType, 0, 'Single-family — limited house hack potential');
 
     if (walkScore != null && walkScore >= t.minWalkScore)
       score += contribute(c, 'Walk Score', 'Location', `${walkScore}`, 15, `Meets ${t.minWalkScore}+ — attractive to tenants`);
-    else
-      contribute(c, 'Walk Score', 'Location', walkScore != null ? `${walkScore}` : 'N/A', 0, walkScore != null ? `Below ${t.minWalkScore}` : 'Data not available');
+    else if (walkScore != null)
+      contribute(c, 'Walk Score', 'Location', `${walkScore}`, 0, `Below ${t.minWalkScore}`);
 
     if (crimeRate && crimeRate < t.maxCrimeRate)
       score += contribute(c, 'Crime Rate', 'Safety', `${crimeRate}`, 10, `Below ${t.maxCrimeRate} — good for owner-occupant`);
-    else
-      contribute(c, 'Crime Rate', 'Safety', crimeRate != null ? `${crimeRate}` : 'N/A', 0, crimeRate != null ? `At/above ${t.maxCrimeRate} — consider carefully` : 'Data not available');
+    else if (crimeRate != null)
+      contribute(c, 'Crime Rate', 'Safety', `${crimeRate}`, 0, `At/above ${t.maxCrimeRate} — consider carefully`);
 
     const cfFloor = t.minMonthlyCashFlow - 200;
     if (metrics.monthlyCashFlow >= cfFloor)

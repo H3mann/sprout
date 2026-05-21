@@ -13,15 +13,19 @@ import Container from '@mui/material/Container';
 import Divider from '@mui/material/Divider';
 import Grid from '@mui/material/Grid2';
 import InputAdornment from '@mui/material/InputAdornment';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import HomeWorkIcon from '@mui/icons-material/HomeWork';
 import LaunchIcon from '@mui/icons-material/Launch';
 import SaveIcon from '@mui/icons-material/Save';
+import TimelineIcon from '@mui/icons-material/Timeline';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import {
   CartesianGrid,
@@ -37,6 +41,8 @@ import {
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { aiApi, dealApi, type DealAnalysisInput, type DealMetrics, type PropertySuggestion } from '../../services/api';
+import { PropertyFinancialsTab, type PropertyFinancialsInput } from './PropertyFinancialsTab';
+import { ProjectionsTab, type ProjectionAssumptions, DEFAULT_ASSUMPTIONS } from './ProjectionsTab';
 
 interface PropertyMeta {
   image_url?: string;
@@ -53,6 +59,8 @@ interface GeoCoords {
 
 interface RouteState extends DealAnalysisInput, PropertyMeta {
   allSuggestions?: PropertySuggestion[];
+  sqft?: number;
+  estimated_rehab_cost?: number;
 }
 
 const ScoreGauge = styled(Box)<{ score: number }>(({ score }) => {
@@ -144,6 +152,17 @@ export const DealAnalyzer = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [resultsTab, setResultsTab] = useState(0);
+  const [financialsInput, setFinancialsInput] = useState<PropertyFinancialsInput>({
+    sqft: routeState?.sqft || 0,
+    arvEstimate: routeState
+      ? (routeState.purchase_price + (routeState.estimated_rehab_cost || 0))
+      : 0,
+    rehabCosts: routeState?.estimated_rehab_cost || 0,
+    purchaseCostsPct: 3,
+    holdingPeriodYears: 5,
+  });
+  const [projectionAssumptions, setProjectionAssumptions] = useState<ProjectionAssumptions>(DEFAULT_ASSUMPTIONS);
 
   useEffect(() => {
     if (!input.property_address.trim()) return;
@@ -179,6 +198,15 @@ export const DealAnalyzer = () => {
     setThesis(null);
     setSuccessMsg(null);
     setError(null);
+    setResultsTab(0);
+    setFinancialsInput({
+      sqft: s.sqft || 0,
+      arvEstimate: s.sqft ? (s.purchase_price + (s.estimated_rehab_cost || 0)) : 0,
+      rehabCosts: s.estimated_rehab_cost || 0,
+      purchaseCostsPct: 3,
+      holdingPeriodYears: 5,
+    });
+    setProjectionAssumptions(DEFAULT_ASSUMPTIONS);
   };
 
   const otherSuggestions = allSuggestions.filter(
@@ -557,143 +585,174 @@ export const DealAnalyzer = () => {
                 </Card>
               )}
 
-              <Grid container spacing={2}>
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <Card>
-                    <CardContent sx={{ textAlign: 'center' }}>
-                      <ScoreGauge score={metrics.investmentScore}>
-                        <Typography variant="h4" fontWeight={700}>
-                          {metrics.investmentScore}
-                        </Typography>
-                        <Typography variant="caption">/100</Typography>
-                      </ScoreGauge>
-                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                        Investment Score
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-                <Grid size={{ xs: 6, sm: 4 }}>
-                  <Card>
-                    <CardContent sx={{ textAlign: 'center' }}>
-                      <Typography variant="body2" color="text.secondary">Monthly Cash Flow</Typography>
-                      <Typography variant="h4" sx={{ color: metrics.monthlyCashFlow >= 0 ? 'success.main' : 'error.main' }}>
-                        {formatCurrency(metrics.monthlyCashFlow)}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-                <Grid size={{ xs: 6, sm: 4 }}>
-                  <Card>
-                    <CardContent sx={{ textAlign: 'center' }}>
-                      <Typography variant="body2" color="text.secondary">Cap Rate</Typography>
-                      <Typography variant="h4" sx={{ color: 'primary.main' }}>
-                        {metrics.capRate.toFixed(2)}%
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              </Grid>
+              <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                <Tabs value={resultsTab} onChange={(_, v) => setResultsTab(v)} variant="scrollable" scrollButtons="auto">
+                  <Tab icon={<CalculateIcon />} iconPosition="start" label="Deal Analysis" />
+                  <Tab icon={<AccountBalanceIcon />} iconPosition="start" label="Property Financials" />
+                  <Tab icon={<TimelineIcon />} iconPosition="start" label="Projections" />
+                </Tabs>
+              </Box>
 
-              <Card>
-                <CardContent>
-                  <Typography variant="h5" sx={{ mb: 2 }}>Key Metrics</Typography>
+              {resultsTab === 0 && (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                   <Grid container spacing={2}>
-                    <Grid size={{ xs: 6, sm: 4 }}>
-                      <Typography variant="body2" color="text.secondary">Cash-on-Cash Return</Typography>
-                      <Typography variant="h6">{metrics.cashOnCashReturn.toFixed(2)}%</Typography>
+                    <Grid size={{ xs: 12, sm: 4 }}>
+                      <Card>
+                        <CardContent sx={{ textAlign: 'center' }}>
+                          <ScoreGauge score={metrics.investmentScore}>
+                            <Typography variant="h4" fontWeight={700}>
+                              {metrics.investmentScore}
+                            </Typography>
+                            <Typography variant="caption">/100</Typography>
+                          </ScoreGauge>
+                          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                            Investment Score
+                          </Typography>
+                        </CardContent>
+                      </Card>
                     </Grid>
                     <Grid size={{ xs: 6, sm: 4 }}>
-                      <Typography variant="body2" color="text.secondary">Gross Rent Multiplier</Typography>
-                      <Typography variant="h6">{metrics.grossRentMultiplier.toFixed(1)}</Typography>
+                      <Card>
+                        <CardContent sx={{ textAlign: 'center' }}>
+                          <Typography variant="body2" color="text.secondary">Monthly Cash Flow</Typography>
+                          <Typography variant="h4" sx={{ color: metrics.monthlyCashFlow >= 0 ? 'success.main' : 'error.main' }}>
+                            {formatCurrency(metrics.monthlyCashFlow)}
+                          </Typography>
+                        </CardContent>
+                      </Card>
                     </Grid>
                     <Grid size={{ xs: 6, sm: 4 }}>
-                      <Typography variant="body2" color="text.secondary">Monthly Mortgage</Typography>
-                      <Typography variant="h6">{formatCurrency(metrics.monthlyMortgage)}</Typography>
-                    </Grid>
-                    <Grid size={{ xs: 6, sm: 4 }}>
-                      <Typography variant="body2" color="text.secondary">NOI (Annual)</Typography>
-                      <Typography variant="h6">{formatCurrency(metrics.noi)}</Typography>
-                    </Grid>
-                    <Grid size={{ xs: 6, sm: 4 }}>
-                      <Typography variant="body2" color="text.secondary">Total Cash Needed</Typography>
-                      <Typography variant="h6">{formatCurrency(metrics.totalCashNeeded)}</Typography>
-                    </Grid>
-                    <Grid size={{ xs: 6, sm: 4 }}>
-                      <Typography variant="body2" color="text.secondary">Annual Cash Flow</Typography>
-                      <Typography variant="h6" sx={{ color: metrics.annualCashFlow >= 0 ? 'success.main' : 'error.main' }}>
-                        {formatCurrency(metrics.annualCashFlow)}
-                      </Typography>
+                      <Card>
+                        <CardContent sx={{ textAlign: 'center' }}>
+                          <Typography variant="body2" color="text.secondary">Cap Rate</Typography>
+                          <Typography variant="h4" sx={{ color: 'primary.main' }}>
+                            {metrics.capRate.toFixed(2)}%
+                          </Typography>
+                        </CardContent>
+                      </Card>
                     </Grid>
                   </Grid>
-                </CardContent>
-              </Card>
 
-              {appreciationData.length > 0 && (
-                <Card>
-                  <CardContent>
-                    <Typography variant="h5" sx={{ mb: 2 }}>Appreciation Projection</Typography>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <LineChart data={appreciationData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="year" />
-                        <YAxis tickFormatter={formatCurrency} width={70} />
-                        <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-                        <Legend />
-                        <Line type="monotone" dataKey="value" name="Property Value" stroke="#1565C0" strokeWidth={2} />
-                        <Line type="monotone" dataKey="equity" name="Equity" stroke="#2E7D32" strokeWidth={2} />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
+                  <Card>
+                    <CardContent>
+                      <Typography variant="h5" sx={{ mb: 2 }}>Key Metrics</Typography>
+                      <Grid container spacing={2}>
+                        <Grid size={{ xs: 6, sm: 4 }}>
+                          <Typography variant="body2" color="text.secondary">Cash-on-Cash Return</Typography>
+                          <Typography variant="h6">{metrics.cashOnCashReturn.toFixed(2)}%</Typography>
+                        </Grid>
+                        <Grid size={{ xs: 6, sm: 4 }}>
+                          <Typography variant="body2" color="text.secondary">Gross Rent Multiplier</Typography>
+                          <Typography variant="h6">{metrics.grossRentMultiplier.toFixed(1)}</Typography>
+                        </Grid>
+                        <Grid size={{ xs: 6, sm: 4 }}>
+                          <Typography variant="body2" color="text.secondary">Monthly Mortgage</Typography>
+                          <Typography variant="h6">{formatCurrency(metrics.monthlyMortgage)}</Typography>
+                        </Grid>
+                        <Grid size={{ xs: 6, sm: 4 }}>
+                          <Typography variant="body2" color="text.secondary">NOI (Annual)</Typography>
+                          <Typography variant="h6">{formatCurrency(metrics.noi)}</Typography>
+                        </Grid>
+                        <Grid size={{ xs: 6, sm: 4 }}>
+                          <Typography variant="body2" color="text.secondary">Total Cash Needed</Typography>
+                          <Typography variant="h6">{formatCurrency(metrics.totalCashNeeded)}</Typography>
+                        </Grid>
+                        <Grid size={{ xs: 6, sm: 4 }}>
+                          <Typography variant="body2" color="text.secondary">Annual Cash Flow</Typography>
+                          <Typography variant="h6" sx={{ color: metrics.annualCashFlow >= 0 ? 'success.main' : 'error.main' }}>
+                            {formatCurrency(metrics.annualCashFlow)}
+                          </Typography>
+                        </Grid>
+                      </Grid>
+                    </CardContent>
+                  </Card>
+
+                  {appreciationData.length > 0 && (
+                    <Card>
+                      <CardContent>
+                        <Typography variant="h5" sx={{ mb: 2 }}>Appreciation Projection</Typography>
+                        <ResponsiveContainer width="100%" height={300}>
+                          <LineChart data={appreciationData}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="year" />
+                            <YAxis tickFormatter={formatCurrency} width={70} />
+                            <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                            <Legend />
+                            <Line type="monotone" dataKey="value" name="Property Value" stroke="#1565C0" strokeWidth={2} />
+                            <Line type="monotone" dataKey="equity" name="Equity" stroke="#2E7D32" strokeWidth={2} />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {aiSummary && (
+                    <Card>
+                      <CardContent>
+                        <Typography variant="h5" sx={{ mb: 2 }}>AI Analysis</Typography>
+                        <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>
+                          {aiSummary}
+                        </Typography>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {!thesis && (
+                    <Button
+                      variant="contained"
+                      color="secondary"
+                      startIcon={loadingThesis ? <CircularProgress size={20} color="inherit" /> : <TrendingUpIcon />}
+                      onClick={handleGenerateThesis}
+                      disabled={loadingThesis}
+                      fullWidth
+                      sx={{ py: 1.5 }}
+                    >
+                      {loadingThesis ? 'Generating Investment Thesis...' : 'Generate Investment Thesis'}
+                    </Button>
+                  )}
+
+                  {thesis && (
+                    <Card sx={{ border: '2px solid', borderColor: 'secondary.main' }}>
+                      <CardContent>
+                        <Typography variant="h5" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <TrendingUpIcon color="secondary" />
+                          Investment Thesis
+                        </Typography>
+                        <Divider sx={{ mb: 2 }} />
+                        <Typography
+                          variant="body1"
+                          component="div"
+                          sx={{
+                            '& h2': { mt: 3, mb: 1, fontSize: '1.25rem', fontWeight: 700 },
+                            '& h3': { mt: 2, mb: 1, fontSize: '1.1rem', fontWeight: 600 },
+                            '& strong': { color: 'primary.main' },
+                            lineHeight: 1.8,
+                          }}
+                          dangerouslySetInnerHTML={{ __html: formatThesisMarkdown(thesis) }}
+                        />
+                      </CardContent>
+                    </Card>
+                  )}
+                </Box>
               )}
 
-              {aiSummary && (
-                <Card>
-                  <CardContent>
-                    <Typography variant="h5" sx={{ mb: 2 }}>AI Analysis</Typography>
-                    <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>
-                      {aiSummary}
-                    </Typography>
-                  </CardContent>
-                </Card>
+              {resultsTab === 1 && (
+                <PropertyFinancialsTab
+                  input={input}
+                  metrics={metrics}
+                  financialsInput={financialsInput}
+                  onFinancialsChange={setFinancialsInput}
+                />
               )}
 
-              {!thesis && (
-                <Button
-                  variant="contained"
-                  color="secondary"
-                  startIcon={loadingThesis ? <CircularProgress size={20} color="inherit" /> : <TrendingUpIcon />}
-                  onClick={handleGenerateThesis}
-                  disabled={loadingThesis}
-                  fullWidth
-                  sx={{ py: 1.5 }}
-                >
-                  {loadingThesis ? 'Generating Investment Thesis...' : 'Generate Investment Thesis'}
-                </Button>
-              )}
-
-              {thesis && (
-                <Card sx={{ border: '2px solid', borderColor: 'secondary.main' }}>
-                  <CardContent>
-                    <Typography variant="h5" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <TrendingUpIcon color="secondary" />
-                      Investment Thesis
-                    </Typography>
-                    <Divider sx={{ mb: 2 }} />
-                    <Typography
-                      variant="body1"
-                      component="div"
-                      sx={{
-                        '& h2': { mt: 3, mb: 1, fontSize: '1.25rem', fontWeight: 700 },
-                        '& h3': { mt: 2, mb: 1, fontSize: '1.1rem', fontWeight: 600 },
-                        '& strong': { color: 'primary.main' },
-                        lineHeight: 1.8,
-                      }}
-                      dangerouslySetInnerHTML={{ __html: formatThesisMarkdown(thesis) }}
-                    />
-                  </CardContent>
-                </Card>
+              {resultsTab === 2 && (
+                <ProjectionsTab
+                  input={input}
+                  metrics={metrics}
+                  financialsInput={financialsInput}
+                  assumptions={projectionAssumptions}
+                  onAssumptionsChange={setProjectionAssumptions}
+                />
               )}
 
               <Box sx={{ display: 'flex', gap: 2 }}>

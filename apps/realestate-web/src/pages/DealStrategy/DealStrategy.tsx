@@ -674,6 +674,8 @@ export const DealStrategy = () => {
         latitude: property.latitude || 0,
         longitude: property.longitude || 0,
         allSuggestions: properties,
+        sqft: property.sqft || 0,
+        estimated_rehab_cost: property.estimated_rehab_cost || 0,
       },
     });
   };
@@ -1528,6 +1530,8 @@ export const DealStrategy = () => {
                                       insurance_annual: deal.insurance_annual,
                                       hoa_monthly: deal.hoa_monthly,
                                       vacancy_rate_pct: deal.vacancy_rate_pct,
+                                      sqft: 0,
+                                      estimated_rehab_cost: 0,
                                     },
                                   });
                                 }}

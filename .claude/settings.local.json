@@ -7,7 +7,10 @@
       "Bash(cp apps/api/src/services/strategyMatcher.ts /tmp/sprout-snapshot/strategyMatcher.ts)",
       "Bash(cp apps/api/src/routes/realestate/ai.ts /tmp/sprout-snapshot/ai.ts)",
       "Bash(cp apps/realestate-web/src/services/api.ts /tmp/sprout-snapshot/api.ts)",
-      "Bash(cp apps/realestate-web/src/pages/DealStrategy/DealStrategy.tsx /tmp/sprout-snapshot/DealStrategy.tsx)"
+      "Bash(cp apps/realestate-web/src/pages/DealStrategy/DealStrategy.tsx /tmp/sprout-snapshot/DealStrategy.tsx)",
+      "Bash(npx tsc *)",
+      "mcp__plugin_chrome-devtools-mcp_chrome-devtools__list_pages",
+      "mcp__plugin_chrome-devtools-mcp_chrome-devtools__new_page"
     ]
   }
 }
