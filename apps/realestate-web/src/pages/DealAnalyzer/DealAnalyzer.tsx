@@ -39,6 +39,7 @@ import {
 } from 'recharts';
 
 import { useLocation, useNavigate } from 'react-router-dom';
+import { FunLoader } from '../../components/FunLoader';
 
 import { aiApi, dealApi, type DealAnalysisInput, type DealMetrics, type PropertySuggestion } from '../../services/api';
 import { PropertyFinancialsTab, type PropertyFinancialsInput } from './PropertyFinancialsTab';
@@ -303,8 +304,8 @@ export const DealAnalyzer = () => {
   ] : [];
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+    <Container maxWidth="lg" sx={{ py: 3 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
         <Button
           variant="text"
           startIcon={<ArrowBackIcon />}
@@ -313,7 +314,20 @@ export const DealAnalyzer = () => {
         >
           Back to Discovery
         </Button>
-        <Typography variant="h3" sx={{ flex: 1 }}>Deal Analyzer</Typography>
+        <Typography variant="h3">Deal Analyzer</Typography>
+        {metrics && (
+          <Tabs
+            value={resultsTab}
+            onChange={(_, v) => setResultsTab(v)}
+            variant="scrollable"
+            scrollButtons="auto"
+            sx={{ ml: 'auto' }}
+          >
+            <Tab icon={<CalculateIcon />} iconPosition="start" label="Analysis" />
+            <Tab icon={<AccountBalanceIcon />} iconPosition="start" label="Financials" />
+            <Tab icon={<TimelineIcon />} iconPosition="start" label="Projections" />
+          </Tabs>
+        )}
       </Box>
 
       {otherSuggestions.length > 0 && (
@@ -518,14 +532,22 @@ export const DealAnalyzer = () => {
 
         <Grid size={{ xs: 12, md: 7 }}>
           {!metrics && !loading && (
-            <Box sx={{ textAlign: 'center', py: 12, color: 'text.secondary' }}>
+            <Box sx={{ textAlign: 'center', py: 8, color: 'text.secondary' }}>
               <TrendingUpIcon sx={{ fontSize: 64, opacity: 0.3, mb: 2 }} />
               <Typography variant="h5">Enter property details and click Analyze</Typography>
             </Box>
           )}
 
+          {loading && (
+            <Card>
+              <CardContent>
+                <FunLoader />
+              </CardContent>
+            </Card>
+          )}
+
           {metrics && (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {(propertyMeta.image_url || coords) && (
                 <Card>
                   <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>
@@ -551,50 +573,27 @@ export const DealAnalyzer = () => {
                         </Grid>
                       )}
                     </Grid>
-                    {(propertyMeta.zillow_url || propertyMeta.realtor_url) && (
+                    {input.property_address && (
                       <Box sx={{ display: 'flex', gap: 1, p: 2 }}>
-                        {propertyMeta.zillow_url && (
-                          <Chip
-                            label="View on Zillow"
-                            icon={<LaunchIcon sx={{ fontSize: 14 }} />}
-                            clickable
-                            component="a"
-                            href={propertyMeta.zillow_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            color="primary"
-                            variant="outlined"
-                          />
-                        )}
-                        {propertyMeta.realtor_url && (
-                          <Chip
-                            label="View on Realtor"
-                            icon={<LaunchIcon sx={{ fontSize: 14 }} />}
-                            clickable
-                            component="a"
-                            href={propertyMeta.realtor_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            color="primary"
-                            variant="outlined"
-                          />
-                        )}
+                        <Chip
+                          label="View on Zillow"
+                          icon={<LaunchIcon sx={{ fontSize: 14 }} />}
+                          clickable
+                          component="a"
+                          href={`https://www.zillow.com/homes/${encodeURIComponent(input.property_address)}_rb/`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          color="primary"
+                          variant="outlined"
+                        />
                       </Box>
                     )}
                   </CardContent>
                 </Card>
               )}
 
-              <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                <Tabs value={resultsTab} onChange={(_, v) => setResultsTab(v)} variant="scrollable" scrollButtons="auto">
-                  <Tab icon={<CalculateIcon />} iconPosition="start" label="Deal Analysis" />
-                  <Tab icon={<AccountBalanceIcon />} iconPosition="start" label="Property Financials" />
-                  <Tab icon={<TimelineIcon />} iconPosition="start" label="Projections" />
-                </Tabs>
-              </Box>
-
               {resultsTab === 0 && (
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                   <Grid container spacing={2}>
                     <Grid size={{ xs: 12, sm: 4 }}>
                       <Card>
@@ -689,7 +688,7 @@ export const DealAnalyzer = () => {
                   {aiSummary && (
                     <Card>
                       <CardContent>
-                        <Typography variant="h5" sx={{ mb: 2 }}>AI Analysis</Typography>
+                        <Typography variant="h5" sx={{ mb: 2 }}>Analysis</Typography>
                         <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>
                           {aiSummary}
                         </Typography>

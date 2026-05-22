@@ -30,6 +30,7 @@ import BuildIcon from '@mui/icons-material/Build';
 import BeachAccessIcon from '@mui/icons-material/BeachAccess';
 import { useNavigate } from 'react-router-dom';
 
+import { FunLoader } from '../../components/FunLoader';
 import { useAuth } from '../../context/AuthContext';
 import { DEFAULT_LOCATION, useSearchLocation } from '../../context/LocationContext';
 import { aiApi, type PropertySuggestion, type InvestmentStrategy } from '../../services/api';
@@ -536,6 +537,20 @@ export const Home = () => {
               </Button>
             </Box>
 
+            {tab === 0 && (
+              <Typography
+                variant="caption"
+                sx={{
+                  mt: 0.75,
+                  color: 'text.secondary',
+                  textAlign: 'center',
+                }}
+              >
+                Tip: You can also paste a specific property address to screen an
+                individual deal.
+              </Typography>
+            )}
+
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1.5 }}>
               {currentSuggestions.map((s) => (
                 <Chip
@@ -561,11 +576,8 @@ export const Home = () => {
 
         {loading && (
           <Card sx={{ mb: 3 }}>
-            <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 4, justifyContent: 'center' }}>
-              <CircularProgress size={24} />
-              <Typography color="text.secondary">
-                {tab === 1 ? 'Researching markets...' : 'Screening deals...'}
-              </Typography>
+            <CardContent>
+              <FunLoader />
             </CardContent>
           </Card>
         )}
@@ -587,12 +599,7 @@ export const Home = () => {
                 </Typography>
               </Box>
 
-              {loadingSuggestions && (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, justifyContent: 'center', py: 4 }}>
-                  <CircularProgress size={24} />
-                  <Typography color="text.secondary">Finding matching properties...</Typography>
-                </Box>
-              )}
+              {loadingSuggestions && <FunLoader />}
 
               {propertySuggestions.length > 0 && !loadingSuggestions && (
                 <Grid container spacing={2}>
@@ -678,38 +685,27 @@ export const Home = () => {
                             {s.strategy_fit || s.why}
                           </Typography>
                         </CardContent>
-                        {(s.zillow_url || s.realtor_url) && (
-                          <Box sx={{ display: 'flex', gap: 1, px: 2, pb: 1.5 }}>
-                            {s.zillow_url && (
-                              <Chip
-                                label="Zillow"
-                                size="small"
-                                icon={<LaunchIcon sx={{ fontSize: 14 }} />}
-                                clickable
-                                component="a"
-                                href={s.zillow_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                                sx={{ fontSize: '0.7rem' }}
-                              />
-                            )}
-                            {s.realtor_url && (
-                              <Chip
-                                label="Realtor"
-                                size="small"
-                                icon={<LaunchIcon sx={{ fontSize: 14 }} />}
-                                clickable
-                                component="a"
-                                href={s.realtor_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                                sx={{ fontSize: '0.7rem' }}
-                              />
-                            )}
-                          </Box>
-                        )}
+                        <Box sx={{ px: 1.5, pb: 1 }}>
+                          <Typography
+                            component="a"
+                            href={`https://www.zillow.com/homes/${encodeURIComponent(s.property_address)}_rb/`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                            variant="caption"
+                            sx={{
+                              color: 'primary.main',
+                              textDecoration: 'none',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 0.5,
+                              '&:hover': { textDecoration: 'underline' },
+                            }}
+                          >
+                            View on Zillow
+                            <LaunchIcon sx={{ fontSize: 12 }} />
+                          </Typography>
+                        </Box>
                       </Card>
                     </Grid>
                   ))}
