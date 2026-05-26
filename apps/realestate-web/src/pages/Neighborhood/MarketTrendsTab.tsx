@@ -15,6 +15,9 @@ import {
   YAxis,
 } from 'recharts';
 
+import Alert from '@mui/material/Alert';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+
 import type { NeighborhoodData, ZillowHomeValue, ZillowRentIndex } from '../../services/api';
 
 interface Props {
@@ -93,6 +96,12 @@ export const MarketTrendsTab = ({ data, homeValues, rentIndex }: Props) => {
           </Card>
         </Grid>
       </Grid>
+
+      {chartData.length === 0 && !chartData.some((d) => d.rent !== null) && (
+        <Alert severity="info" icon={<InfoOutlinedIcon />} sx={{ mb: 3 }}>
+          Zillow home value and rent trend data is not yet available for this location. We're actively expanding our coverage.
+        </Alert>
+      )}
 
       {chartData.length > 0 && (
         <Card sx={{ mb: 3 }}>

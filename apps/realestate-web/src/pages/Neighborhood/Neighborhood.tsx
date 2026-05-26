@@ -11,6 +11,7 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
+import BuildIcon from '@mui/icons-material/Build';
 import DirectionsWalkIcon from '@mui/icons-material/DirectionsWalk';
 import GroupIcon from '@mui/icons-material/Group';
 import SearchIcon from '@mui/icons-material/Search';
@@ -100,9 +101,17 @@ export const Neighborhood = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h3" sx={{ mb: 3 }}>
+      <Typography variant="h3" sx={{ mb: 1 }}>
         Neighborhood Intelligence
       </Typography>
+
+      <Alert
+        severity="info"
+        icon={<BuildIcon fontSize="small" />}
+        sx={{ mb: 3 }}
+      >
+        This feature is a work in progress. Some data may be unavailable for certain locations as we continue adding more data sources.
+      </Alert>
 
       <Box component="form" onSubmit={handleSearch} sx={{ display: 'flex', gap: 1, mb: 4 }}>
         <TextField

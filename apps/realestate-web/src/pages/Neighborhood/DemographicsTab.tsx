@@ -9,6 +9,9 @@ import PaidIcon from '@mui/icons-material/Paid';
 import SchoolIcon from '@mui/icons-material/School';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
+import Alert from '@mui/material/Alert';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+
 import type { NeighborhoodData } from '../../services/api';
 
 interface Props {
@@ -39,6 +42,16 @@ const COLORS = ['#1565C0', '#F9A825', '#2E7D32', '#C62828', '#7B1FA2'];
 export const DemographicsTab = ({ data }: Props) => {
   const { demographics, housing } = data;
 
+  const allDemoNull = demographics.population === null
+    && demographics.medianHouseholdIncome === null
+    && demographics.medianAge === null
+    && demographics.educationBachelorsPct === null;
+
+  const allHousingNull = housing.totalUnits === null
+    && housing.medianHomeValue === null
+    && housing.medianRent === null
+    && housing.vacancyRate === null;
+
   const housingTenure = [
     { name: 'Owner-Occupied', value: housing.ownerOccupiedPct ?? 0 },
     { name: 'Renter-Occupied', value: 100 - (housing.ownerOccupiedPct ?? 0) },
@@ -63,6 +76,12 @@ export const DemographicsTab = ({ data }: Props) => {
             />
           </CardContent>
         </Card>
+      )}
+
+      {allDemoNull && (
+        <Alert severity="info" icon={<InfoOutlinedIcon />} sx={{ mb: 3 }}>
+          Census data is not available for this location. Try searching by ZIP code for more accurate results.
+        </Alert>
       )}
 
       <Grid container spacing={3} sx={{ mb: 4 }}>
@@ -95,6 +114,12 @@ export const DemographicsTab = ({ data }: Props) => {
           />
         </Grid>
       </Grid>
+
+      {!allDemoNull && allHousingNull && (
+        <Alert severity="info" icon={<InfoOutlinedIcon />} sx={{ mb: 3 }}>
+          Housing data is not available for this location.
+        </Alert>
+      )}
 
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, md: 6 }}>

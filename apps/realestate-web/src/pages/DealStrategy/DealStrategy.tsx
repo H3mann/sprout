@@ -516,6 +516,7 @@ export const DealStrategy = () => {
   const [loadingDeals, setLoadingDeals] = useState(false);
   const [properties, setProperties] = useState<PropertySuggestion[]>([]);
   const [loadingProperties, setLoadingProperties] = useState(false);
+  const [hasSearchedProperties, setHasSearchedProperties] = useState(false);
   const [location, setLocation] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [expandedDealId, setExpandedDealId] = useState<string | null>(null);
@@ -636,6 +637,7 @@ export const DealStrategy = () => {
     if (!strategyKey) return;
     setLoadingProperties(true);
     setError(null);
+    setHasSearchedProperties(false);
     try {
       const result = await aiApi.suggestionsByStrategy(
         strategyKey,
@@ -651,6 +653,7 @@ export const DealStrategy = () => {
       setError(err instanceof Error ? err.message : 'Failed to find properties');
     } finally {
       setLoadingProperties(false);
+      setHasSearchedProperties(true);
     }
   }, [strategyKey, location, customTargetMetrics, customLocationPreferences]);
 
@@ -1171,20 +1174,26 @@ export const DealStrategy = () => {
         </Card>
 
         {/* AI Property Suggestions */}
-        {(loadingProperties || properties.length > 0) && (
+        {(loadingProperties || properties.length > 0 || hasSearchedProperties) && (
           <Box sx={{ mb: 4 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-              <AutoAwesomeIcon sx={{ color }} />
-              <Typography variant="h5">
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+              <AutoAwesomeIcon sx={{ color, fontSize: 20 }} />
+              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                 {strategy.name} Properties
               </Typography>
               {!loadingProperties && (
                 <Chip
                   label={`${properties.length} found`}
                   size="small"
-                  sx={{ ml: 1, bgcolor: `${color}15`, color, fontWeight: 600 }}
+                  sx={{ bgcolor: `${color}15`, color, fontWeight: 600 }}
                 />
               )}
+              <Typography variant="caption" color="text.secondary" sx={{ mx: 0.5 }}>
+                —
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Property images coming soon — click "View on Zillow" to see photos
+              </Typography>
             </Box>
 
             {loadingProperties && (
@@ -1201,6 +1210,20 @@ export const DealStrategy = () => {
                   <CircularProgress size={28} sx={{ color }} />
                   <Typography color="text.secondary">
                     Finding {strategy.name.toLowerCase()} properties...
+                  </Typography>
+                </CardContent>
+              </Card>
+            )}
+
+            {!loadingProperties && hasSearchedProperties && properties.length === 0 && (
+              <Card variant="outlined">
+                <CardContent sx={{ textAlign: 'center', py: 6 }}>
+                  <SearchIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1.5 }} />
+                  <Typography variant="h6" color="text.secondary" sx={{ mb: 0.5 }}>
+                    No results found
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Try a different location or adjust your strategy thresholds above.
                   </Typography>
                 </CardContent>
               </Card>

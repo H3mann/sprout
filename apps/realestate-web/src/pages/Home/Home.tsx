@@ -287,6 +287,7 @@ export const Home = () => {
   const [strategies, setStrategies] = useState<InvestmentStrategy[]>([]);
   const [loadingStrategies, setLoadingStrategies] = useState(false);
   const [selectedStrategy, setSelectedStrategy] = useState<string | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
 
   useEffect(() => {
     setLoadingStrategies(true);
@@ -341,6 +342,7 @@ export const Home = () => {
 
         setLoadingSuggestions(true);
         setPropertySuggestions([]);
+        setHasSearched(false);
 
         // Use strategy-specific endpoint if filter is selected
         const suggestionPromise = selectedStrategy
@@ -349,7 +351,7 @@ export const Home = () => {
 
         suggestionPromise.then((suggestionsResult) => {
           setPropertySuggestions(suggestionsResult.properties);
-        }).catch(() => {}).finally(() => setLoadingSuggestions(false));
+        }).catch(() => {}).finally(() => { setLoadingSuggestions(false); setHasSearched(true); });
 
         setQuery('');
       } catch (err) {
@@ -582,13 +584,19 @@ export const Home = () => {
           </Card>
         )}
 
-        {(loadingSuggestions || propertySuggestions.length > 0) && (
+        {(loadingSuggestions || propertySuggestions.length > 0 || hasSearched) && (
           <Card sx={{ mb: 3 }}>
             <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                <AutoAwesomeIcon color="secondary" />
-                <Typography variant="h5" sx={{ fontSize: { xs: '1.15rem', sm: '1.5rem' } }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+                <AutoAwesomeIcon color="secondary" sx={{ fontSize: 20 }} />
+                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                   Suggested Properties
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ mx: 0.5 }}>
+                  —
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Property images coming soon — click "View on Zillow" to see photos
                 </Typography>
                 <Typography
                   variant="body2"
@@ -600,6 +608,18 @@ export const Home = () => {
               </Box>
 
               {loadingSuggestions && <FunLoader />}
+
+              {!loadingSuggestions && hasSearched && propertySuggestions.length === 0 && (
+                <Box sx={{ textAlign: 'center', py: 4 }}>
+                  <SearchIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1.5 }} />
+                  <Typography variant="h6" color="text.secondary" sx={{ mb: 0.5 }}>
+                    No results found
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Try another search or adjust your criteria.
+                  </Typography>
+                </Box>
+              )}
 
               {propertySuggestions.length > 0 && !loadingSuggestions && (
                 <Grid container spacing={2}>
@@ -716,9 +736,9 @@ export const Home = () => {
         )}
 
         {history.map((entry, i) => (
-          <Card key={i} sx={{ mb: 3 }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+          <Card key={i} sx={{ mb: 2 }}>
+            <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.75 }}>
                 <Chip
                   size="small"
                   label={entry.type === 'discover' ? 'Discovery' : 'Screening'}
@@ -729,19 +749,50 @@ export const Home = () => {
                 </Typography>
               </Box>
 
-              <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.75 }}>
                 {entry.query}
               </Typography>
 
-              <Divider sx={{ mb: 2 }} />
+              <Divider sx={{ mb: 1 }} />
 
               <Typography
-                variant="body1"
+                variant="body2"
                 component="div"
                 sx={{
-                  whiteSpace: 'pre-line',
-                  '& h2, & h3': { mt: 2, mb: 1 },
-                  lineHeight: 1.7,
+                  '& h2': { fontSize: '1.05rem', fontWeight: 700, mt: 2, mb: 0.75, color: 'text.primary' },
+                  '& h3': { fontSize: '0.95rem', fontWeight: 600, mt: 1.5, mb: 0.5, color: 'text.primary' },
+                  '& p': { mt: 0, mb: 0.75 },
+                  '& .kv-grid': {
+                    display: 'grid',
+                    gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+                    gap: '4px 16px',
+                    bgcolor: 'grey.50',
+                    borderRadius: 1,
+                    p: 1.5,
+                    my: 0.75,
+                    fontSize: '0.8rem',
+                  },
+                  '& .kv-row': {
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    gap: 1,
+                    py: 0.25,
+                    borderBottom: '1px solid',
+                    borderColor: 'divider',
+                  },
+                  '& .kv-label': { color: 'text.secondary', fontWeight: 500, flexShrink: 0 },
+                  '& .kv-value': { fontWeight: 600, textAlign: 'right' },
+                  '& .market-card': {
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 1,
+                    p: 1.5,
+                    my: 1,
+                  },
+                  '& .market-title': { fontWeight: 700, fontSize: '0.9rem', mb: 0.5 },
+                  '& .bullet-list': { pl: 2, my: 0.5 },
+                  '& .bullet-item': { py: 0.25 },
+                  lineHeight: 1.5,
                 }}
                 dangerouslySetInnerHTML={{
                   __html: formatMarkdown(entry.response),
@@ -817,14 +868,131 @@ export const Home = () => {
 };
 
 function formatMarkdown(text: string): string {
-  return text
+  const esc = text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/^- (.+)$/gm, '&bull; $1')
-    .replace(/^\d+\. (.+)$/gm, (_, content) => `&bull; ${content}`);
+    .replace(/>/g, '&gt;');
+
+  const inline = (s: string) =>
+    s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+     .replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+  const blocks = esc.split(/\n{2,}/);
+  const result: string[] = [];
+
+  for (const block of blocks) {
+    const lines = block.split('\n').map((l) => l.trim()).filter(Boolean);
+    if (!lines.length) continue;
+
+    // Heading
+    if (/^#{2,3}\s/.test(lines[0])) {
+      const tag = lines[0].startsWith('###') ? 'h3' : 'h2';
+      const title = lines[0].replace(/^#{2,3}\s+/, '');
+      result.push(`<${tag}>${inline(title)}</${tag}>`);
+      const rest = lines.slice(1);
+      if (rest.length) result.push(formatLines(rest, inline));
+      continue;
+    }
+
+    // Numbered market section (e.g. "1. **Cleveland, OH**")
+    if (/^\d+\.\s+\*\*/.test(lines[0])) {
+      const titleMatch = lines[0].match(/^\d+\.\s+\*\*(.+?)\*\*(.*)$/);
+      if (titleMatch) {
+        const kvLines = lines.slice(1).filter(isBulletLine);
+        const otherLines = lines.slice(1).filter((l) => !isBulletLine(l));
+        result.push(`<div class="market-card">`);
+        result.push(`<div class="market-title">${inline(titleMatch[1])}</div>`);
+        if (titleMatch[2].trim()) result.push(`<p>${inline(titleMatch[2].trim())}</p>`);
+        if (kvLines.length) result.push(formatKvOrBullets(kvLines, inline));
+        if (otherLines.length) result.push(`<p>${otherLines.map(inline).join('<br/>')}</p>`);
+        result.push('</div>');
+        continue;
+      }
+    }
+
+    result.push(formatLines(lines, inline));
+  }
+
+  return result.join('');
+}
+
+function isBulletLine(line: string): boolean {
+  return /^[-•]\s/.test(line) || /^\d+\.\s/.test(line);
+}
+
+function stripBulletPrefix(line: string): string {
+  return line.replace(/^[-•]\s+/, '').replace(/^\d+\.\s+/, '');
+}
+
+function formatKvOrBullets(
+  lines: string[],
+  inline: (s: string) => string,
+): string {
+  const kvPairs: [string, string][] = [];
+  const bullets: string[] = [];
+
+  for (const line of lines) {
+    const cleaned = stripBulletPrefix(line);
+    const kvMatch = cleaned.match(/^\*\*(.+?)\*\*[:\s]+(.+)$/);
+    if (kvMatch) {
+      kvPairs.push([kvMatch[1], kvMatch[2]]);
+    } else {
+      bullets.push(cleaned);
+    }
+  }
+
+  let html = '';
+  if (kvPairs.length) {
+    html += '<div class="kv-grid">';
+    html += kvPairs
+      .map(([k, v]) => `<div class="kv-row"><span class="kv-label">${inline(k)}</span><span class="kv-value">${inline(v)}</span></div>`)
+      .join('');
+    html += '</div>';
+  }
+  if (bullets.length) {
+    html += '<div class="bullet-list">';
+    html += bullets.map((b) => `<div class="bullet-item">&bull; ${inline(b)}</div>`).join('');
+    html += '</div>';
+  }
+  return html;
+}
+
+function formatLines(
+  lines: string[],
+  inline: (s: string) => string,
+): string {
+  const allBullets = lines.every(isBulletLine);
+  if (allBullets && lines.length >= 1) return formatKvOrBullets(lines, inline);
+
+  const parts: string[] = [];
+  let proseBuf: string[] = [];
+
+  const flushProse = () => {
+    if (proseBuf.length) {
+      parts.push(`<p>${proseBuf.map(inline).join('<br/>')}</p>`);
+      proseBuf = [];
+    }
+  };
+
+  const bulletBuf: string[] = [];
+  const flushBullets = () => {
+    if (bulletBuf.length) {
+      parts.push(formatKvOrBullets(bulletBuf, inline));
+      bulletBuf.length = 0;
+    }
+  };
+
+  for (const line of lines) {
+    if (isBulletLine(line)) {
+      flushProse();
+      bulletBuf.push(line);
+    } else {
+      flushBullets();
+      proseBuf.push(line);
+    }
+  }
+  flushProse();
+  flushBullets();
+
+  return parts.join('');
 }

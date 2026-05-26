@@ -5,8 +5,10 @@ import Chip from '@mui/material/Chip';
 import Grid from '@mui/material/Grid2';
 import LinearProgress from '@mui/material/LinearProgress';
 import Typography from '@mui/material/Typography';
+import Alert from '@mui/material/Alert';
 import FloodIcon from '@mui/icons-material/Flood';
 import GavelIcon from '@mui/icons-material/Gavel';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import WarningIcon from '@mui/icons-material/Warning';
 
 import type { NeighborhoodData } from '../../services/api';
@@ -27,8 +29,17 @@ const riskColor = (risk: string | null) => {
 export const SafetyTab = ({ data }: Props) => {
   const { safety, climate } = data;
 
+  const crimeUnavailable = safety.violentCrimeRate === null && safety.propertyCrimeRate === null;
+  const floodUnavailable = !climate.floodZone && !climate.floodRisk;
+
   return (
     <Box>
+      {crimeUnavailable && floodUnavailable && (
+        <Alert severity="info" icon={<InfoOutlinedIcon />} sx={{ mb: 3 }}>
+          Safety and flood risk data is not available for this location. Crime stats are currently limited to state-level estimates.
+        </Alert>
+      )}
+
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, md: 6 }}>
           <Card>

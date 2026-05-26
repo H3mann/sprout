@@ -4,9 +4,11 @@ import CardContent from '@mui/material/CardContent';
 import Grid from '@mui/material/Grid2';
 import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
+import Alert from '@mui/material/Alert';
 import DirectionsBikeIcon from '@mui/icons-material/DirectionsBike';
 import DirectionsBusIcon from '@mui/icons-material/DirectionsBus';
 import DirectionsWalkIcon from '@mui/icons-material/DirectionsWalk';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 
 import type { NeighborhoodData } from '../../services/api';
 
@@ -105,8 +107,18 @@ export const WalkabilityTab = ({ data }: Props) => {
     },
   ];
 
+  const allNull = walkability.walkScore === null && walkability.transitScore === null && walkability.bikeScore === null;
+
   return (
     <Grid container spacing={3}>
+      {allNull && (
+        <Grid size={{ xs: 12 }}>
+          <Alert severity="info" icon={<InfoOutlinedIcon />}>
+            Walkability scores are not available for this location. Scores are derived from nearby amenities in OpenStreetMap and may be limited in rural areas.
+          </Alert>
+        </Grid>
+      )}
+
       {scores.map((item) => (
         <Grid key={item.label} size={{ xs: 12, sm: 4 }}>
           <Card>
