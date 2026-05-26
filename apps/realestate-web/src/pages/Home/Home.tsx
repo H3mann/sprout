@@ -748,7 +748,14 @@ export const Home = () => {
                 </Typography>
               </Box>
 
-              <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.75 }}>
+              <Typography
+                variant="subtitle2"
+                sx={{
+                  fontWeight: 600,
+                  mb: 0.75,
+                  fontSize: { xs: '0.875rem', md: '1.05rem' },
+                }}
+              >
                 {entry.query}
               </Typography>
 
@@ -758,24 +765,37 @@ export const Home = () => {
                 variant="body2"
                 component="div"
                 sx={{
-                  '& h2': { fontSize: '1.05rem', fontWeight: 700, mt: 2, mb: 0.75, color: 'text.primary' },
-                  '& h3': { fontSize: '0.95rem', fontWeight: 600, mt: 1.5, mb: 0.5, color: 'text.primary' },
-                  '& p': { mt: 0, mb: 0.75 },
+                  fontSize: { xs: '0.875rem', md: '1rem' },
+                  '& h2': {
+                    fontSize: { xs: '1.05rem', md: '1.35rem' },
+                    fontWeight: 700,
+                    mt: { xs: 2, md: 2.5 },
+                    mb: { xs: 0.75, md: 1 },
+                    color: 'text.primary',
+                  },
+                  '& h3': {
+                    fontSize: { xs: '0.95rem', md: '1.15rem' },
+                    fontWeight: 600,
+                    mt: { xs: 1.5, md: 2 },
+                    mb: { xs: 0.5, md: 0.75 },
+                    color: 'text.primary',
+                  },
+                  '& p': { mt: 0, mb: { xs: 0.75, md: 1 } },
                   '& .kv-grid': {
                     display: 'grid',
                     gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
-                    gap: '4px 16px',
+                    gap: { xs: '4px 16px', md: '6px 20px' },
                     bgcolor: 'grey.50',
                     borderRadius: 1,
-                    p: 1.5,
-                    my: 0.75,
-                    fontSize: '0.8rem',
+                    p: { xs: 1.5, md: 2 },
+                    my: { xs: 0.75, md: 1 },
+                    fontSize: { xs: '0.8rem', md: '0.95rem' },
                   },
                   '& .kv-row': {
                     display: 'flex',
                     justifyContent: 'space-between',
                     gap: 1,
-                    py: 0.25,
+                    py: { xs: 0.25, md: 0.5 },
                     borderBottom: '1px solid',
                     borderColor: 'divider',
                   },
@@ -785,13 +805,20 @@ export const Home = () => {
                     border: '1px solid',
                     borderColor: 'divider',
                     borderRadius: 1,
-                    p: 1.5,
-                    my: 1,
+                    p: { xs: 1.5, md: 2 },
+                    my: { xs: 1, md: 1.5 },
                   },
-                  '& .market-title': { fontWeight: 700, fontSize: '0.9rem', mb: 0.5 },
-                  '& .bullet-list': { pl: 2, my: 0.5 },
-                  '& .bullet-item': { py: 0.25 },
-                  lineHeight: 1.5,
+                  '& .market-title': {
+                    fontWeight: 700,
+                    fontSize: { xs: '0.9rem', md: '1.1rem' },
+                    mb: { xs: 0.5, md: 0.75 },
+                  },
+                  '& .bullet-list': { pl: 2, my: { xs: 0.5, md: 0.75 } },
+                  '& .bullet-item': {
+                    py: { xs: 0.25, md: 0.4 },
+                    fontSize: { xs: '0.875rem', md: '1rem' },
+                  },
+                  lineHeight: { xs: 1.5, md: 1.65 },
                 }}
                 dangerouslySetInnerHTML={{
                   __html: formatMarkdown(entry.response),
