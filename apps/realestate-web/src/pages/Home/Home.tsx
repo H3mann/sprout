@@ -330,14 +330,13 @@ export const Home = () => {
             ? await aiApi.discover(augmentedQuery)
             : await aiApi.screen(augmentedQuery);
 
-        setHistory((prev) => [
+        setHistory([
           {
             query: trimmed,
             response: result.response,
             type: tab === 1 ? 'discover' : 'screen',
             timestamp: new Date(),
           },
-          ...prev,
         ]);
 
         setLoadingSuggestions(true);
