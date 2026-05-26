@@ -316,7 +316,11 @@ export const Home = () => {
       }
 
       setLoading(true);
+      setLoadingSuggestions(true);
       setError(null);
+      setHistory([]);
+      setPropertySuggestions([]);
+      setHasSearched(false);
 
       const trimmed = query.trim();
       const locationApplied = searchLocation && searchLocation.trim() && searchLocation !== DEFAULT_LOCATION;
@@ -338,10 +342,6 @@ export const Home = () => {
             timestamp: new Date(),
           },
         ]);
-
-        setLoadingSuggestions(true);
-        setPropertySuggestions([]);
-        setHasSearched(false);
 
         // Use strategy-specific endpoint if filter is selected
         const suggestionPromise = selectedStrategy
