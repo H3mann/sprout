@@ -14,9 +14,31 @@ const STATE_ABBR_TO_FIPS: Record<string, string> = {
   WY: '56', DC: '11',
 };
 
-export async function getCrimeStats(stateAbbr: string): Promise<CrimeResponse> {
+const STATE_NAME_TO_ABBR: Record<string, string> = {
+  ALABAMA: 'AL', ALASKA: 'AK', ARIZONA: 'AZ', ARKANSAS: 'AR', CALIFORNIA: 'CA',
+  COLORADO: 'CO', CONNECTICUT: 'CT', DELAWARE: 'DE', FLORIDA: 'FL', GEORGIA: 'GA',
+  HAWAII: 'HI', IDAHO: 'ID', ILLINOIS: 'IL', INDIANA: 'IN', IOWA: 'IA',
+  KANSAS: 'KS', KENTUCKY: 'KY', LOUISIANA: 'LA', MAINE: 'ME', MARYLAND: 'MD',
+  MASSACHUSETTS: 'MA', MICHIGAN: 'MI', MINNESOTA: 'MN', MISSISSIPPI: 'MS',
+  MISSOURI: 'MO', MONTANA: 'MT', NEBRASKA: 'NE', NEVADA: 'NV',
+  'NEW HAMPSHIRE': 'NH', 'NEW JERSEY': 'NJ', 'NEW MEXICO': 'NM', 'NEW YORK': 'NY',
+  'NORTH CAROLINA': 'NC', 'NORTH DAKOTA': 'ND', OHIO: 'OH', OKLAHOMA: 'OK',
+  OREGON: 'OR', PENNSYLVANIA: 'PA', 'RHODE ISLAND': 'RI', 'SOUTH CAROLINA': 'SC',
+  'SOUTH DAKOTA': 'SD', TENNESSEE: 'TN', TEXAS: 'TX', UTAH: 'UT', VERMONT: 'VT',
+  VIRGINIA: 'VA', WASHINGTON: 'WA', 'WEST VIRGINIA': 'WV', WISCONSIN: 'WI',
+  WYOMING: 'WY', 'DISTRICT OF COLUMBIA': 'DC',
+};
+
+function resolveStateAbbr(input: string): string {
+  const upper = input.trim().toUpperCase();
+  if (STATE_ABBR_TO_FIPS[upper]) return upper;
+  return STATE_NAME_TO_ABBR[upper] || '';
+}
+
+export async function getCrimeStats(stateInput: string): Promise<CrimeResponse> {
   try {
-    const fips = STATE_ABBR_TO_FIPS[stateAbbr.toUpperCase()];
+    const abbr = resolveStateAbbr(stateInput);
+    const fips = abbr ? STATE_ABBR_TO_FIPS[abbr] : undefined;
     if (!fips) {
       return { violentCrimeRate: null, propertyCrimeRate: null };
     }

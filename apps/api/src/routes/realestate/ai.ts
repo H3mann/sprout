@@ -862,4 +862,65 @@ router.post('/analyze-strategy', async (req, res) => {
   }
 });
 
+// --- Neighborhood AI Summary ---
+
+router.post('/neighborhood-summary', async (req, res) => {
+  const { location, data } = req.body;
+  if (!location) return res.status(400).json({ error: 'location is required' });
+
+  try {
+    const systemPrompt = `You are a real estate investment analyst specializing in neighborhood-level market intelligence.
+Given structured data about a location, produce a concise but insightful investment summary in markdown.
+
+Structure your response with these sections:
+## Investment Appeal
+Rate the overall investment attractiveness and explain why in 2-3 sentences.
+
+## Key Strengths
+Bullet list of 3-4 strengths backed by the data provided and your knowledge of the area.
+
+## Risk Factors
+Bullet list of 2-3 risks or concerns an investor should be aware of.
+
+## Market Outlook
+2-3 sentences on where this market is headed — appreciation trajectory, rental demand trends, and any upcoming developments or economic shifts.
+
+Keep it practical and data-driven. Reference specific numbers from the data when available. Do NOT repeat raw data — interpret it.`;
+
+    const demo = data?.demographics || {};
+    const housing = data?.housing || {};
+    const market = data?.marketTrends || {};
+    const walk = data?.walkability || {};
+    const safety = data?.safety || {};
+    const climate = data?.climate || {};
+
+    const userPrompt = `Analyze this neighborhood for real estate investment potential:
+
+Location: ${location}
+Population: ${demo.population ?? 'N/A'} | Median Age: ${demo.medianAge ?? 'N/A'}
+Median Household Income: ${demo.medianHouseholdIncome ? `$${demo.medianHouseholdIncome.toLocaleString()}` : 'N/A'}
+Education (Bachelor's+): ${demo.educationBachelorsPct != null ? `${demo.educationBachelorsPct.toFixed(1)}%` : 'N/A'}
+Poverty Rate: ${demo.povertyRate != null ? `${demo.povertyRate.toFixed(1)}%` : 'N/A'}
+
+Housing: ${housing.totalUnits ?? 'N/A'} units | Vacancy: ${housing.vacancyRate != null ? `${housing.vacancyRate.toFixed(1)}%` : 'N/A'}
+Median Home Value: ${housing.medianHomeValue ? `$${housing.medianHomeValue.toLocaleString()}` : 'N/A'}
+Median Rent: ${housing.medianRent ? `$${housing.medianRent.toLocaleString()}/mo` : 'N/A'}
+Owner-Occupied: ${housing.ownerOccupiedPct != null ? `${housing.ownerOccupiedPct.toFixed(0)}%` : 'N/A'}
+
+Mortgage Rate: ${market.currentMortgageRate != null ? `${market.currentMortgageRate.toFixed(2)}%` : 'N/A'}
+Case-Shiller Index: ${market.caseShillerIndex ?? 'N/A'}
+
+Walk Score: ${walk.walkScore ?? 'N/A'} | Transit Score: ${walk.transitScore ?? 'N/A'} | Bike Score: ${walk.bikeScore ?? 'N/A'}
+Violent Crime Rate: ${safety.violentCrimeRate != null ? `${safety.violentCrimeRate.toFixed(1)} per 100K` : 'N/A'}
+Property Crime Rate: ${safety.propertyCrimeRate != null ? `${safety.propertyCrimeRate.toFixed(1)} per 100K` : 'N/A'}
+Flood Zone: ${climate.floodZone || 'N/A'} | Flood Risk: ${climate.floodRisk || 'N/A'}`;
+
+    const summary = await askPerplexity(systemPrompt, userPrompt);
+    res.json({ location, summary });
+  } catch (err) {
+    console.error('[ai:neighborhood-summary]', err);
+    res.status(500).json({ error: 'Failed to generate neighborhood summary' });
+  }
+});
+
 export default router;

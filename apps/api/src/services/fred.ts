@@ -9,7 +9,7 @@ async function getLatestObservation(seriesId: string): Promise<number | null> {
 
   try {
     const url = `${FRED_BASE}/series/observations?series_id=${seriesId}&sort_order=desc&limit=1&api_key=${apiKey}&file_type=json`;
-    const res = await fetch(url);
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
 
     if (!res.ok) {
       console.error(`[fred] API error for ${seriesId}:`, res.status);

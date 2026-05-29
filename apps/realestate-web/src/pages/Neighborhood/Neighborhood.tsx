@@ -19,12 +19,38 @@ import ShieldIcon from '@mui/icons-material/Shield';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import { useSearchParams } from 'react-router-dom';
 
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Divider from '@mui/material/Divider';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+
+import { FunLoader } from '../../components/FunLoader';
 import { useAuth } from '../../context/AuthContext';
-import { neighborhoodApi, savedSearchApi, zillowApi, type NeighborhoodData, type ZillowHomeValue, type ZillowRentIndex } from '../../services/api';
+import { aiApi, neighborhoodApi, savedSearchApi, zillowApi, type NeighborhoodData, type ZillowHomeValue, type ZillowRentIndex } from '../../services/api';
 import { DemographicsTab } from './DemographicsTab';
 import { MarketTrendsTab } from './MarketTrendsTab';
 import { SafetyTab } from './SafetyTab';
 import { WalkabilityTab } from './WalkabilityTab';
+
+function formatMarkdown(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/^## (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^### (.+)$/gm, '<h4>$1</h4>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/^[-•] (.+)$/gm, '<li>$1</li>')
+    .replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>')
+    .replace(/\n{2,}/g, '</p><p>')
+    .replace(/^(?!<[hul])/gm, '')
+    .replace(/^/, '<p>')
+    .replace(/$/, '</p>')
+    .replace(/<p><\/p>/g, '')
+    .replace(/<p>(<[hul])/g, '$1')
+    .replace(/(<\/[hul]\w*>)<\/p>/g, '$1');
+}
 
 export const Neighborhood = () => {
   const { user } = useAuth();
@@ -40,6 +66,8 @@ export const Neighborhood = () => {
   const [data, setData] = useState<NeighborhoodData | null>(null);
   const [homeValues, setHomeValues] = useState<ZillowHomeValue[]>([]);
   const [rentIndex, setRentIndex] = useState<ZillowRentIndex[]>([]);
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [loadingAi, setLoadingAi] = useState(false);
 
   const fetchData = useCallback(async (location: string) => {
     if (!location.trim()) return;
@@ -59,6 +87,13 @@ export const Neighborhood = () => {
       setHomeValues(homeValueData);
       setRentIndex(rentData);
       setActiveLocation(location.trim());
+
+      setLoadingAi(true);
+      setAiSummary(null);
+      aiApi.neighborhoodSummary(location.trim(), neighborhoodData)
+        .then((result) => setAiSummary(result.summary))
+        .catch(() => {})
+        .finally(() => setLoadingAi(false));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load neighborhood data');
     } finally {
@@ -166,6 +201,36 @@ export const Neighborhood = () => {
               </Button>
             )}
           </Box>
+
+          {(loadingAi || aiSummary) && (
+            <Card sx={{ mb: 3 }}>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                  <AutoAwesomeIcon color="secondary" sx={{ fontSize: 20 }} />
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                    AI Investment Insights
+                  </Typography>
+                </Box>
+                <Divider sx={{ mb: 2 }} />
+                {loadingAi && <FunLoader />}
+                {!loadingAi && aiSummary && (
+                  <Typography
+                    variant="body2"
+                    component="div"
+                    sx={{
+                      '& h3': { fontSize: '1.1rem', fontWeight: 700, mt: 2, mb: 0.75, color: 'text.primary' },
+                      '& h4': { fontSize: '0.95rem', fontWeight: 600, mt: 1.5, mb: 0.5, color: 'text.primary' },
+                      '& ul': { pl: 2.5, my: 0.5 },
+                      '& li': { py: 0.25 },
+                      '& p': { my: 0.5 },
+                      lineHeight: 1.65,
+                    }}
+                    dangerouslySetInnerHTML={{ __html: formatMarkdown(aiSummary) }}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 4 }}>
             <Tabs value={tab} onChange={(_, v) => setTab(v)} variant="scrollable" scrollButtons="auto">

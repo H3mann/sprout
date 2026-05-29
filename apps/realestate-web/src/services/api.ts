@@ -348,4 +348,9 @@ export const aiApi = {
       method: 'POST',
       body: JSON.stringify(input),
     }),
+  neighborhoodSummary: (location: string, data: NeighborhoodData) =>
+    request<{ location: string; summary: string }>('/realestate/ai/neighborhood-summary', {
+      method: 'POST',
+      body: JSON.stringify({ location, data }),
+    }),
 };
